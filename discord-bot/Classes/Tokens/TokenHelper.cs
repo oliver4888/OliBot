@@ -12,19 +12,18 @@ namespace discord_bot.Classes
     public static class TokenHelper
     {
         private static Dictionary<string, string> _tokens;
-        private static string _tokenFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokens.xml");
 
-        public static async Task LoadTokens()
+        public static async Task LoadTokens(string tokenFile)
         {
             _tokens = new Dictionary<string, string>();
 
-            if (!File.Exists(_tokenFile))
+            if (!File.Exists(tokenFile))
             {
-                CreateTokensFile();
+                CreateTokensFile(tokenFile);
                 return;
             }
 
-            string text = File.ReadAllText(_tokenFile);
+            string text = File.ReadAllText(tokenFile);
             XElement rootElement = XElement.Parse(text);
             foreach (var el in rootElement.Elements())
             {
@@ -32,13 +31,13 @@ namespace discord_bot.Classes
             }
         }
 
-        private static void CreateTokensFile()
+        private static void CreateTokensFile(string tokenFile)
         {
             _tokens = new Dictionary<string, string>();
 
             XElement el = new XElement("root", _tokens.Select(kv => new XElement(kv.Key, kv.Value)));
 
-            el.Save(_tokenFile);
+            el.Save(tokenFile);
         }
 
         public static Dictionary<string, string> GetAllTokens()
