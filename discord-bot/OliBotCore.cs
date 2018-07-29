@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using discord_bot.Classes;
+using System.Timers;
 
 namespace discord_bot
 {
@@ -14,6 +15,8 @@ namespace discord_bot
 
         private static string OliBotTokenKey = "olibot";
 
+        private readonly Timer _statusTimer = new Timer(1500);
+
         static void Main(string[] args)
         {
             Instance.RunBot().ConfigureAwait(false).GetAwaiter().GetResult();
@@ -23,6 +26,8 @@ namespace discord_bot
         public async Task RunBot()
         {
             await TokenHelper.LoadTokens();
+
+            await Login(TokenHelper.GetTokenValue(OliBotTokenKey));
 
             if (!TokenHelper.AtLeastOneTokenExists())
             {
@@ -34,17 +39,7 @@ namespace discord_bot
                 Console.WriteLine($"There isn't a token for OliBot!{Environment.NewLine}Please create a token with the key: {OliBotTokenKey}");
                 return;
             }
-
-            OliBotClient = new DiscordClient(new DiscordConfiguration
-            {
-#if DEBUG
-                UseInternalLogHandler = true,
-                LogLevel = LogLevel.Debug,
-#endif
-                Token = TokenHelper.GetTokenValue(OliBotTokenKey),
-                TokenType = TokenType.Bot
-            });
-
+            
             OliBotClient.MessageCreated += async e =>
             {
                 if (e.Author.IsBot)
@@ -61,10 +56,36 @@ namespace discord_bot
                 if (e.Message.Content.ToLower().StartsWith("ping"))
                     await e.Message.RespondAsync("pong!");
             };
-
-
-            await OliBotClient.ConnectAsync();
+            
             await Task.Delay(-1);
+        }
+
+        private async Task<bool> Login(string token)
+        {
+            Console.WriteLine("Attempting to login");
+            try
+            {
+                OliBotClient = new DiscordClient(new DiscordConfiguration
+                {
+#if DEBUG
+                    UseInternalLogHandler = true,
+                    LogLevel = LogLevel.Debug,
+#endif
+                    Token = token,
+                    TokenType = TokenType.Bot
+                });
+
+                await OliBotClient.ConnectAsync();
+
+                Console.WriteLine("Bot ready!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Login failed!");
+                Console.WriteLine(ex);
+                return false;
+            }
+            return true;
         }
     }
 }
