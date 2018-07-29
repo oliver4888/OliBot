@@ -67,7 +67,7 @@ namespace discord_bot
 #endif
                     return;
 
-                Console.WriteLine($"New message! {e.Author.Username} said: {e.Message.Content}");
+                Console.WriteLine($"New message in {e.Guild.Name}/{e.Channel.Name}! {e.Author.Username} said: {e.Message.Content}");
 
                 if (e.Message.Content.ToLower().StartsWith("ping"))
                     await e.Message.RespondAsync("pong!");
