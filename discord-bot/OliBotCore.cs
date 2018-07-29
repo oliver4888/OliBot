@@ -29,7 +29,7 @@ namespace discord_bot
                 Console.WriteLine("No tokens exist!");
                 return;
             }
-            else if (TokenHelper.TokenExists(OliBotTokenKey))
+            else if (!TokenHelper.TokenExists(OliBotTokenKey))
             {
                 Console.WriteLine($"There isn't a token for OliBot!{Environment.NewLine}Please create a token with the key: {OliBotTokenKey}");
                 return;
@@ -49,12 +49,19 @@ namespace discord_bot
             {
                 if (e.Author.IsBot)
                     return;
+#if DEBUG
+                if (e.Channel.Id != 473108499887292447)
+#else
+                if (e.Channel.Id == 473108499887292447)
+#endif
+                    return;
 
                 Console.WriteLine($"New message! {e.Author.Username} said: {e.Message.Content}");
 
                 if (e.Message.Content.ToLower().StartsWith("ping"))
                     await e.Message.RespondAsync("pong!");
             };
+
 
             await OliBotClient.ConnectAsync();
             await Task.Delay(-1);
