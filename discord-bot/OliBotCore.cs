@@ -40,12 +40,12 @@ namespace discord_bot
 
             if (!TokenHelper.AtLeastOneTokenExists())
             {
-                Console.WriteLine("No tokens exist!");
+                WriteToConsole("Tokens", "No tokens exist!");
                 return;
             }
             else if (!TokenHelper.TokenExists(OliBotTokenKey))
             {
-                Console.WriteLine($"There isn't a token for OliBot!{Environment.NewLine}Please create a token with the key: '{OliBotTokenKey}'");
+                WriteToConsole("Tokens", $"There isn't a token for OliBot!{Environment.NewLine}Please create a token with the key: '{OliBotTokenKey}'");
                 return;
             }
 
@@ -58,8 +58,6 @@ namespace discord_bot
 
             OliBotClient.MessageCreated += async e =>
             {
-                if (e.Author.IsBot)
-                    return;
 #if DEBUG
                 if (e.Channel.Id != 473108499887292447)
 #else
@@ -67,10 +65,16 @@ namespace discord_bot
 #endif
                     return;
 
-                Console.WriteLine($"New message in {e.Guild.Name}/{e.Channel.Name}! {e.Author.Username} said: {e.Message.Content}");
+                WriteToConsole("NewMessage", $"{e.Guild.Name}/{e.Channel.Name}! {e.Author.Username} said: {e.Message.Content}");
+                
+                if (e.Author.IsBot)
+                    return;
 
                 if (e.Message.Content.ToLower().StartsWith("ping"))
                     await e.Message.RespondAsync("pong!");
+
+                if (e.Message.Content.ToLower() == "!src")
+                    await e.Message.RespondAsync("The OliBot source code can be found at:\r\nhttps://gitlab.com/Oliver4888/discord-bot");
             };
 
             await Task.Delay(-1);
@@ -78,7 +82,7 @@ namespace discord_bot
 
         private async Task Login(string token)
         {
-            Console.WriteLine("Attempting to login");
+            WriteToConsole("General", "Attempting to login");
             try
             {
                 OliBotClient = new DiscordClient(new DiscordConfiguration
@@ -93,11 +97,11 @@ namespace discord_bot
 
                 await OliBotClient.ConnectAsync();
 
-                Console.WriteLine("Bot ready!");
+                WriteToConsole("General", "Bot ready!");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Login failed!");
+                Console.WriteLine("General", "Login failed!");
                 Console.WriteLine(ex);
             }
             return;
@@ -140,9 +144,14 @@ namespace discord_bot
 
             string status = _statuses[_random.Next(_statuses.Count)];
 
-            Console.WriteLine($"Set status to {status}");
+            WriteToConsole("Status", $"Set status to {status}");
 
             await OliBotClient.UpdateStatusAsync(new DiscordGame(status));
+        }
+
+        public void WriteToConsole(string category, string message)
+        {
+            Console.WriteLine($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} {(DateTime.Now.IsDaylightSavingTime() ? "+01:00" : "")}] [OliBot] [{category}] {message}");
         }
     }
 }
