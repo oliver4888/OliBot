@@ -11,19 +11,20 @@ namespace discord_bot
 {
     class OliBotCore
     {
-        public DiscordClient OliBotClient;
+        public static DiscordClient OliBotClient;
 
         private static OliBotCore _instance;
         public static OliBotCore Instance => _instance ?? (_instance = new OliBotCore());
 
-        private static string OliBotTokenKey = "olibot";
+        private static readonly string OliBotTokenKey = "olibot";
 
         // Eventually I will move everything into a OliBotConfig.xml or something like that.
-        private static string _tokenFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokens.xml");
-        private static string _statusesFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "statuses.txt");
+        private static readonly string _tokenFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokens.xml");
+        private static readonly string _statusesFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "statuses.txt");
 
         private readonly Timer _statusTimer = new Timer(30 * (60 * 1000)); // Every 30 minutes
         private static List<string> _statuses;
+        private static Queue<string> _statusHistoryQueue = new Queue<string>();
 
         private static Random _random = new Random();
 
@@ -51,10 +52,14 @@ namespace discord_bot
 
             await Login(TokenHelper.GetTokenValue(OliBotTokenKey));
 
+#if DEBUG
+            await SetStatus("Getting an upgrade");
+#else
             OliBotClient.Ready += async (sender) => await SetRandomStatus();
 
             _statusTimer.Elapsed += async (sender, args) => await SetRandomStatus();
             _statusTimer.Start();
+#endif
 
             OliBotClient.MessageCreated += async e =>
             {
@@ -65,16 +70,30 @@ namespace discord_bot
 #endif
                     return;
 
-                WriteToConsole("NewMessage", $"{e.Guild.Name}/{e.Channel.Name}! {e.Author.Username} said: {e.Message.Content}");
-                
+                string userName = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
+
+                if (userName == null)
+                {
+                    userName = $"{e.Author.Username}#{e.Author.Discriminator}";
+                }
+                else
+                {
+                    userName += $"({e.Author.Username}#{e.Author.Discriminator})";
+                }
+
+                WriteToConsole("NewMessage", $"{e.Guild.Name}/{e.Channel.Name}: {userName} said: {e.Message.Content}");
+
                 if (e.Author.IsBot)
                     return;
 
                 if (e.Message.Content.ToLower().StartsWith("ping"))
-                    await e.Message.RespondAsync("pong!");
+                    await e.Message.RespondAsync($"{e.Author.Mention}, pong!");
 
                 if (e.Message.Content.ToLower() == "!src")
-                    await e.Message.RespondAsync("The OliBot source code can be found at:\r\nhttps://gitlab.com/Oliver4888/discord-bot");
+                    await e.Message.RespondAsync($"{e.Author.Mention}, The OliBot source code can be found at:\r\nhttps://gitlab.com/Oliver4888/discord-bot");
+
+                if (e.Message.Content.ToLower().Contains("olly") || e.Message.Content.ToLower().Contains("ollie"))
+                    await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
             };
 
             await Task.Delay(-1);
@@ -129,7 +148,7 @@ namespace discord_bot
                 _statuses = new List<string>(defaultStatuses);
                 return;
             }
-            
+
             using (StreamReader reader = File.OpenText(_statusesFile))
             {
                 string fileText = await reader.ReadToEndAsync();
@@ -142,16 +161,31 @@ namespace discord_bot
             if (_statuses == null)
                 return;
 
-            string status = _statuses[_random.Next(_statuses.Count)];
+            string status;
+
+            do
+            {
+                status = _statuses[_random.Next(_statuses.Count)];
+            } while (status.Trim() == "" && _statusHistoryQueue.Contains(status));
+
+            _statusHistoryQueue.Enqueue(status);
+
+            if (_statusHistoryQueue.Count > _statuses.Count / 3)
+                _statusHistoryQueue.Dequeue();
 
             WriteToConsole("Status", $"Set status to {status}");
 
+            await SetStatus(status);
+        }
+
+        private async Task SetStatus(string status)
+        {
             await OliBotClient.UpdateStatusAsync(new DiscordGame(status));
         }
 
         public void WriteToConsole(string category, string message)
         {
-            Console.WriteLine($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} {(DateTime.Now.IsDaylightSavingTime() ? "+01:00" : "")}] [OliBot] [{category}] {message}");
+            Console.WriteLine($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}{(DateTime.Now.IsDaylightSavingTime() ? " +01:00" : "")}] [OliBot] [{category}] {message}");
         }
     }
 }
