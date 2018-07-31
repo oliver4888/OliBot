@@ -37,8 +37,11 @@
     <Reference Include="DSharpPlus, Version=3.2.3.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\DSharpPlus.3.2.3\lib\net46\DSharpPlus.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="DSharpPlus.CommandsNext, Version=3.2.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DSharpPlus.CommandsNext.3.2.3\lib\net46\DSharpPlus.CommandsNext.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -50,7 +53,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Tokens\TokenHelper.cs" />
+    <Compile Include="Classes\Commands\OliBotCommands.cs" />
+    <Compile Include="Classes\Helpers\Strat\StratHelper.cs" />
+    <Compile Include="Classes\Helpers\Tokens\TokenHelper.cs" />
     <Compile Include="OliBotCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

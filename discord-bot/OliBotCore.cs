@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.EventArgs;
 
 namespace discord_bot
 {
@@ -15,6 +17,8 @@ namespace discord_bot
 
         private static OliBotCore _instance;
         public static OliBotCore Instance => _instance ?? (_instance = new OliBotCore());
+
+        private static CommandsNextModule commands;
 
         private static readonly string OliBotTokenKey = "olibot";
 
@@ -27,6 +31,13 @@ namespace discord_bot
         private static Queue<string> _statusHistoryQueue = new Queue<string>();
 
         private static Random _random = new Random();
+
+        public static ulong Oliver4888Id = 149509587425296384;
+
+        public static ulong DevGuildId = 223546785598144512;
+        public static ulong DevChannelId = 473108499887292447;
+
+        public static ulong CSGOStratGuildId = 306171979583717386;
 
         static void Main(string[] args)
         {
@@ -52,50 +63,6 @@ namespace discord_bot
 
             await Login(TokenHelper.GetTokenValue(OliBotTokenKey));
 
-#if DEBUG
-            await SetStatus("Getting an upgrade");
-#else
-            OliBotClient.Ready += async (sender) => await SetRandomStatus();
-
-            _statusTimer.Elapsed += async (sender, args) => await SetRandomStatus();
-            _statusTimer.Start();
-#endif
-
-            OliBotClient.MessageCreated += async e =>
-            {
-#if DEBUG
-                if (e.Channel.Id != 473108499887292447)
-#else
-                if (e.Channel.Id == 473108499887292447)
-#endif
-                    return;
-
-                string userName = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
-
-                if (userName == null)
-                {
-                    userName = $"{e.Author.Username}#{e.Author.Discriminator}";
-                }
-                else
-                {
-                    userName += $"({e.Author.Username}#{e.Author.Discriminator})";
-                }
-
-                WriteToConsole("NewMessage", $"{e.Guild.Name}/{e.Channel.Name}: {userName} said: {e.Message.Content}");
-
-                if (e.Author.IsBot)
-                    return;
-
-                if (e.Message.Content.ToLower().StartsWith("ping"))
-                    await e.Message.RespondAsync($"{e.Author.Mention}, pong!");
-
-                if (e.Message.Content.ToLower() == "!src")
-                    await e.Message.RespondAsync($"{e.Author.Mention}, The OliBot source code can be found at:\r\nhttps://gitlab.com/Oliver4888/discord-bot");
-
-                if (e.Message.Content.ToLower().Contains("olly") || e.Message.Content.ToLower().Contains("ollie"))
-                    await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
-            };
-
             await Task.Delay(-1);
         }
 
@@ -114,9 +81,18 @@ namespace discord_bot
                     TokenType = TokenType.Bot
                 });
 
-                await OliBotClient.ConnectAsync();
+                commands = OliBotClient.UseCommandsNext(new CommandsNextConfiguration
+                {
+                    StringPrefix = "?",
+                    CaseSensitive = false
+                });
 
-                WriteToConsole("General", "Bot ready!");
+                commands.RegisterCommands<OliBotCommands>();
+
+                OliBotClient.MessageCreated += async e => await OliBot_MessageCreated(e);
+                OliBotClient.Ready += async e => await OliBot_Ready(e);
+
+                await OliBotClient.ConnectAsync();
             }
             catch (Exception ex)
             {
@@ -186,6 +162,48 @@ namespace discord_bot
         public void WriteToConsole(string category, string message)
         {
             Console.WriteLine($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}{(DateTime.Now.IsDaylightSavingTime() ? " +01:00" : "")}] [OliBot] [{category}] {message}");
+        }
+
+        private async Task OliBot_Ready(ReadyEventArgs e)
+        {
+            WriteToConsole("General", "Bot ready!");
+#if DEBUG
+            await SetStatus("Getting an upgrade");
+#else
+            await SetRandomStatus();
+
+            _statusTimer.Elapsed += async (sender, args) => await SetRandomStatus();
+            _statusTimer.Start();
+#endif
+        }
+
+        private async Task OliBot_MessageCreated(MessageCreateEventArgs e)
+        {
+#if DEBUG
+            if (e.Channel.Id != DevChannelId)
+#else
+            if (e.Channel.Id == DevChannelId)
+#endif
+                return;
+
+            string userName = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
+
+            if (userName == null)
+            {
+                userName = $"{e.Author.Username}#{e.Author.Discriminator}";
+            }
+            else
+            {
+                userName += $"({e.Author.Username}#{e.Author.Discriminator})";
+            }
+
+            WriteToConsole("NewMessage", $"{e.Guild.Name}/{e.Channel.Name}: {userName} said: {e.Message.Content}");
+
+            if (e.Author.IsBot)
+                return;
+
+            if (e.Message.Content.ToLower().Contains("olly") || e.Message.Content.ToLower().Contains("ollie"))
+                await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
         }
     }
 }
