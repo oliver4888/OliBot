@@ -8,6 +8,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
+using NLog;
 
 namespace discord_bot
 {
@@ -18,7 +19,7 @@ namespace discord_bot
         private static OliBotCore _instance;
         public static OliBotCore Instance => _instance ?? (_instance = new OliBotCore());
 
-        private static CommandsNextModule commands;
+        private static CommandsNextModule _commands;
 
         private static readonly string OliBotTokenKey = "olibot";
 
@@ -39,6 +40,8 @@ namespace discord_bot
 
         public static ulong CSGOStratGuildId = 306171979583717386;
 
+        public static Logger Log = LogManager.GetLogger("OliBot");
+
         static void Main(string[] args)
         {
             Instance.RunBot().ConfigureAwait(false).GetAwaiter().GetResult();
@@ -52,12 +55,12 @@ namespace discord_bot
 
             if (!TokenHelper.AtLeastOneTokenExists())
             {
-                WriteToConsole("Tokens", "No tokens exist!");
+                Log.Warn("Tokens| No tokens exist!");
                 return;
             }
             else if (!TokenHelper.TokenExists(OliBotTokenKey))
             {
-                WriteToConsole("Tokens", $"There isn't a token for OliBot!{Environment.NewLine}Please create a token with the key: '{OliBotTokenKey}'");
+                Log.Warn($"Tokens| There isn't a token for OliBot! Please create a token with the key: '{OliBotTokenKey}'");
                 return;
             }
 
@@ -68,7 +71,7 @@ namespace discord_bot
 
         private async Task Login(string token)
         {
-            WriteToConsole("General", "Attempting to login");
+            Log.Info("General| Attempting to login");
             try
             {
                 OliBotClient = new DiscordClient(new DiscordConfiguration
@@ -81,13 +84,13 @@ namespace discord_bot
                     TokenType = TokenType.Bot
                 });
 
-                commands = OliBotClient.UseCommandsNext(new CommandsNextConfiguration
+                _commands = OliBotClient.UseCommandsNext(new CommandsNextConfiguration
                 {
                     StringPrefix = "?",
                     CaseSensitive = false
                 });
 
-                commands.RegisterCommands<OliBotCommands>();
+                _commands.RegisterCommands<OliBotCommands>();
 
                 OliBotClient.MessageCreated += async e => await OliBot_MessageCreated(e);
                 OliBotClient.Ready += async e => await OliBot_Ready(e);
@@ -96,8 +99,7 @@ namespace discord_bot
             }
             catch (Exception ex)
             {
-                Console.WriteLine("General", "Login failed!");
-                Console.WriteLine(ex);
+                Log.Fatal(ex, "Login failed!");
             }
             return;
         }
@@ -149,7 +151,7 @@ namespace discord_bot
             if (_statusHistoryQueue.Count > _statuses.Count / 3)
                 _statusHistoryQueue.Dequeue();
 
-            WriteToConsole("Status", $"Set status to {status}");
+            Log.Info($"Status| Set status to {status}");
 
             await SetStatus(status);
         }
@@ -159,14 +161,9 @@ namespace discord_bot
             await OliBotClient.UpdateStatusAsync(new DiscordGame(status));
         }
 
-        public void WriteToConsole(string category, string message)
-        {
-            Console.WriteLine($"[{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}{(DateTime.Now.IsDaylightSavingTime() ? " +01:00" : "")}] [OliBot] [{category}] {message}");
-        }
-
         private async Task OliBot_Ready(ReadyEventArgs e)
         {
-            WriteToConsole("General", "Bot ready!");
+            Log.Info("General| Bot ready!");
 #if DEBUG
             await SetStatus("Getting an upgrade");
 #else
@@ -197,7 +194,7 @@ namespace discord_bot
                 userName += $"({e.Author.Username}#{e.Author.Discriminator})";
             }
 
-            WriteToConsole("NewMessage", $"{e.Guild.Name}/{e.Channel.Name}: {userName} said: {e.Message.Content}");
+            Log.Info($"NewMessage| {e.Guild.Name}/{e.Channel.Name}: {userName} said: {e.Message.Content}");
 
             if (e.Author.IsBot)
                 return;
