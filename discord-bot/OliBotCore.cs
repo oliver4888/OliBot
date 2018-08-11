@@ -78,7 +78,7 @@ namespace discord_bot
                 {
 #if DEBUG
                     UseInternalLogHandler = true,
-                    LogLevel = LogLevel.Debug,
+                    LogLevel = DSharpPlus.LogLevel.Debug,
 #endif
                     Token = token,
                     TokenType = TokenType.Bot

@@ -29,7 +29,7 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            await ctx.RespondAsync($"{ctx.User.Mention}, the OliBot source code can be found at: https://gitlab.com/Oliver4888/discord-bot");
+            await ctx.RespondAsync($"{ctx.User.Mention}, the OliBot source code can be found at: https://github.com/oliver4888/OliBot");
         }
 
         [Command("ping")]
@@ -107,6 +107,74 @@ namespace discord_bot.Classes
             }
 
             await ctx.RespondAsync($"{ctx.User.Mention}: {await StratHelper.UpdateStrats()}");
+        }
+
+        [Command("remove-recent-reactions")]
+        [Description("Removes all reactions from the specified channel for the past 100 messages")]
+        [Aliases("rrr")]
+        public async Task RemoveRecentReactions(
+            CommandContext ctx,
+            [Description("Which channel OliBot will remove reactions from")] DiscordChannel channel = null,
+            [Description("Whose reactions OliBot will remove")] DiscordUser user = null,
+            [Description("How many messages should OliBot remove messages from, max 100")] int limit = 100,
+            [RemainingText] [Description("Why are the reactions being removed")] string reason = null)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            if (
+                ctx.User.Id != OliBotCore.Oliver4888Id &&
+                !ctx.Guild.GetMemberAsync(ctx.User.Id).Result.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageMessages))
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            if (limit > 100)
+                limit = 100;
+
+            if (channel == null)
+                channel = ctx.Channel;
+
+            int reactionsRemoved = 0;
+            int fromMessages = 0;
+
+            IReadOnlyList<DiscordMessage> messages = await channel.GetMessagesAsync(limit);
+
+            Parallel.ForEach(messages, message =>
+            {
+                if (message.Reactions.Count > 0)
+                {
+                    fromMessages++;
+                    if (user == null)
+                    {
+                        reactionsRemoved += message.Reactions.Count;
+                        message.DeleteAllReactionsAsync(reason);
+                    }
+                    else
+                    {
+                        foreach (DiscordReaction reaction in message.Reactions)
+                        {
+                            reactionsRemoved++;
+                            message.DeleteReactionAsync(reaction.Emoji, user, reason);
+                        }
+                    }
+                }
+            });
+
+            if (reactionsRemoved == 0 && fromMessages == 0)
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, I couldn't find any reactions to remove ");
+            }
+            else
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, Removed {reactionsRemoved} reaction{(reactionsRemoved > 0 ? "s" : "")} from {fromMessages} message{(fromMessages > 0 ? "s" : "")}!");
+            }
         }
     }
 }
