@@ -95,7 +95,9 @@ namespace discord_bot
                 OliBotClient.MessageCreated += async e => await OliBot_MessageCreated(e);
                 OliBotClient.GuildCreated += async e => await OliBot_GuildCreated(e);
                 OliBotClient.GuildDeleted += async e => await OliBot_GuildDeleted(e);
-                OliBotClient.GuildMemberRemoved += async e => { if (e.Member.Id == Oliver4888Id) await UnauthorisedBotUse(e.Guild); };
+
+                OliBotClient.GuildMemberAdded += async e => await OliBot_GuildMemberAdded(e);
+                OliBotClient.GuildMemberRemoved += async e => await OliBot_GuildMemberRemoved(e);
 
                 OliBotClient.Ready += async e => await OliBot_Ready(e);
 
@@ -106,6 +108,21 @@ namespace discord_bot
                 Log.Fatal(ex, "Login failed!");
             }
             return;
+        }
+
+        private string GetUserNameFromDiscordUser(DiscordGuild guild, DiscordUser user)
+        {
+            string userName = guild.GetMemberAsync(guild.Id).Result.Nickname;
+
+            if (userName == null)
+            {
+                userName = $"{user.Username}#{user.Discriminator}";
+            }
+            else
+            {
+                userName += $"({user.Username}#{user.Discriminator})";
+            }
+            return userName;
         }
 
         #region Status Helpers
@@ -232,24 +249,25 @@ namespace discord_bot
 #endif
                 return;
 
-            string userName = e.Guild.GetMemberAsync(e.Author.Id).Result.Nickname;
-
-            if (userName == null)
-            {
-                userName = $"{e.Author.Username}#{e.Author.Discriminator}";
-            }
-            else
-            {
-                userName += $"({e.Author.Username}#{e.Author.Discriminator})";
-            }
-
-            Log.Info($"NewMessage| {e.Guild.Name}/{e.Channel.Name}: {userName} said: {e.Message.Content}");
+            Log.Info($"NewMessage| {e.Guild.Name}/{e.Channel.Name}: {GetUserNameFromDiscordUser(e.Guild, e.Message.Author)} said: {e.Message.Content}");
 
             if (e.Author.IsBot)
                 return;
 
             if (e.Message.Content.ToLower().Contains("olly") || e.Message.Content.ToLower().Contains("ollie"))
                 await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
+        }
+
+        private async Task OliBot_GuildMemberAdded(GuildMemberAddEventArgs e)
+        {
+            Log.Info($"GuildMemberAdded| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}");
+        }
+
+        private async Task OliBot_GuildMemberRemoved(GuildMemberRemoveEventArgs e)
+        {
+            Log.Info($"GuildMemberRemoved| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}");
+
+            if (e.Member.Id == Oliver4888Id) await UnauthorisedBotUse(e.Guild);
         }
 
         #endregion

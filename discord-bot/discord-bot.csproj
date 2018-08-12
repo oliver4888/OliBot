@@ -63,9 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Commands\OliBotCommands.cs" />
     <Compile Include="Classes\Helpers\Strat\StratHelper.cs" />
     <Compile Include="Classes\Helpers\Tokens\TokenHelper.cs" />
+    <Compile Include="Classes\Commands\OliBotCommands.cs" />
     <Compile Include="OliBotCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
