@@ -112,7 +112,7 @@ namespace discord_bot
 
         private string GetUserNameFromDiscordUser(DiscordGuild guild, DiscordUser user)
         {
-            string userName = guild.GetMemberAsync(guild.Id).Result.Nickname;
+            string userName = guild.GetMemberAsync(user.Id).Result.Nickname;
 
             if (userName == null)
             {
@@ -260,7 +260,7 @@ namespace discord_bot
 
         private async Task OliBot_GuildMemberAdded(GuildMemberAddEventArgs e)
         {
-            Log.Info($"GuildMemberAdded| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}");
+            Log.Info($"GuildMemberAdded| {e.Guild.Name}({e.Guild.Id}) {GetUserNameFromDiscordUser(e.Guild, e.Member)}");
         }
 
         private async Task OliBot_GuildMemberRemoved(GuildMemberRemoveEventArgs e)
