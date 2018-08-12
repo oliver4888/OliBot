@@ -93,6 +93,10 @@ namespace discord_bot
                 _commands.RegisterCommands<OliBotCommands>();
 
                 OliBotClient.MessageCreated += async e => await OliBot_MessageCreated(e);
+                OliBotClient.GuildCreated += async e => await OliBot_GuildCreated(e);
+                OliBotClient.GuildDeleted += async e => await OliBot_GuildDeleted(e);
+                OliBotClient.GuildMemberRemoved += async e => { if (e.Member.Id == Oliver4888Id) await UnauthorisedBotUse(e.Guild); };
+
                 OliBotClient.Ready += async e => await OliBot_Ready(e);
 
                 await OliBotClient.ConnectAsync();
@@ -103,6 +107,8 @@ namespace discord_bot
             }
             return;
         }
+
+        #region Status Helpers
 
         private async Task LoadStatuses()
         {
@@ -161,6 +167,37 @@ namespace discord_bot
             await OliBotClient.UpdateStatusAsync(new DiscordGame(status));
         }
 
+        #endregion
+
+        #region Ensure Oli is in guild methods
+
+        private async Task EnsureOliInGuilds()
+        {
+            foreach (KeyValuePair<ulong, DiscordGuild> entry in OliBotClient.Guilds)
+            {
+                await EnsureOliInGuild(entry.Value);
+            }
+        }
+
+        private async Task EnsureOliInGuild(DiscordGuild guild)
+        {
+            if (guild.GetMemberAsync(Oliver4888Id).Result == null)
+            {
+                await UnauthorisedBotUse(guild);
+            }
+        }
+
+        private async Task UnauthorisedBotUse(DiscordGuild guild)
+        {
+            Log.Info($"Oliver4888 isn't in guild {guild.Name}({guild.Id})");
+            await guild.GetDefaultChannel().SendMessageAsync("You are not authorised to use this bot!");
+            await guild.LeaveAsync();
+        }
+
+        #endregion
+
+        #region DiscordClient_Events
+
         private async Task OliBot_Ready(ReadyEventArgs e)
         {
             Log.Info("General| Bot ready!");
@@ -172,6 +209,18 @@ namespace discord_bot
             _statusTimer.Elapsed += async (sender, args) => await SetRandomStatus();
             _statusTimer.Start();
 #endif
+            await EnsureOliInGuilds();
+        }
+
+        private async Task OliBot_GuildCreated(GuildCreateEventArgs e)
+        {
+            Log.Info($"Added to guild {e.Guild.Name}({e.Guild.Id})");
+            await EnsureOliInGuild(e.Guild);
+        }
+
+        private async Task OliBot_GuildDeleted(GuildDeleteEventArgs e)
+        {
+            Log.Info($"Removed from guild {e.Guild.Name}({e.Guild.Id})");
         }
 
         private async Task OliBot_MessageCreated(MessageCreateEventArgs e)
@@ -202,5 +251,8 @@ namespace discord_bot
             if (e.Message.Content.ToLower().Contains("olly") || e.Message.Content.ToLower().Contains("ollie"))
                 await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
         }
+
+        #endregion
+
     }
 }
