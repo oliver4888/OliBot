@@ -9,6 +9,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.EventArgs;
 using NLog;
+using System.Text.RegularExpressions;
 
 namespace discord_bot
 {
@@ -27,7 +28,7 @@ namespace discord_bot
         private static readonly string _tokenFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokens.xml");
         private static readonly string _statusesFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "statuses.txt");
 
-        private readonly Timer _statusTimer = new Timer(30 * (60 * 1000)); // Every 30 minutes
+        public readonly Timer StatusTimer = new Timer(30 * (60 * 1000)); // Every 30 minutes
         private static List<string> _statuses;
         private static Queue<string> _statusHistoryQueue = new Queue<string>();
 
@@ -41,6 +42,8 @@ namespace discord_bot
         public static ulong CSGOStratGuildId = 306171979583717386;
 
         public static Logger Log = LogManager.GetLogger("OliBot");
+
+        private static OliBotEvents _events = new OliBotEvents();
 
         static void Main(string[] args)
         {
@@ -72,6 +75,7 @@ namespace discord_bot
         private async Task Login(string token)
         {
             Log.Info("General| Attempting to login");
+
             try
             {
                 OliBotClient = new DiscordClient(new DiscordConfiguration
@@ -92,14 +96,16 @@ namespace discord_bot
 
                 _commands.RegisterCommands<OliBotCommands>();
 
-                OliBotClient.MessageCreated += async e => await OliBot_MessageCreated(e);
-                OliBotClient.GuildCreated += async e => await OliBot_GuildCreated(e);
-                OliBotClient.GuildDeleted += async e => await OliBot_GuildDeleted(e);
+                OliBotClient.MessageCreated += async e => await _events.OliBot_MessageCreated(e);
+                OliBotClient.GuildCreated += async e => await _events.OliBot_GuildCreated(e);
+                OliBotClient.GuildDeleted += async e => await _events.OliBot_GuildDeleted(e);
 
-                OliBotClient.GuildMemberAdded += async e => await OliBot_GuildMemberAdded(e);
-                OliBotClient.GuildMemberRemoved += async e => await OliBot_GuildMemberRemoved(e);
+                OliBotClient.ChannelCreated += async e => await _events.OliBotCore_ChannelCreated(e);
 
-                OliBotClient.Ready += async e => await OliBot_Ready(e);
+                OliBotClient.GuildMemberAdded += async e => await _events.OliBot_GuildMemberAdded(e);
+                OliBotClient.GuildMemberRemoved += async e => await _events.OliBot_GuildMemberRemoved(e);
+
+                OliBotClient.Ready += async e => await _events.OliBot_Ready(e);
 
                 await OliBotClient.ConnectAsync();
             }
@@ -107,10 +113,25 @@ namespace discord_bot
             {
                 Log.Fatal(ex, "Login failed!");
             }
+
+            try
+            {
+                RedditHelper.Login(
+                    TokenHelper.GetTokenValue("redditUsername"),
+                    TokenHelper.GetTokenValue("redditPassword"),
+                    TokenHelper.GetTokenValue("redditClientId"),
+                    TokenHelper.GetTokenValue("redditSecret")
+                );
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Reddit login failed!");
+            }
+
             return;
         }
 
-        private string GetUserNameFromDiscordUser(DiscordGuild guild, DiscordUser user)
+        public string GetUserNameFromDiscordUser(DiscordGuild guild, DiscordUser user)
         {
             string userName = guild.GetMemberAsync(user.Id).Result.Nickname;
 
@@ -157,7 +178,27 @@ namespace discord_bot
             }
         }
 
-        private async Task SetRandomStatus()
+        private bool SaveStatuses()
+        {
+            try
+            {
+                File.WriteAllLines(_statusesFile, _statuses);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Log.Fatal(ex, "Failed to save to status file");
+            }
+            return false;
+        }
+
+        public bool AddStatus(string status)
+        {
+            _statuses.Add(status);
+            return SaveStatuses();
+        }
+
+        public async Task SetRandomStatus()
         {
             if (_statuses == null)
                 return;
@@ -173,14 +214,13 @@ namespace discord_bot
 
             if (_statusHistoryQueue.Count > _statuses.Count / 3)
                 _statusHistoryQueue.Dequeue();
-
-            Log.Info($"Status| Set status to {status}");
-
+            
             await SetStatus(status);
         }
 
-        private async Task SetStatus(string status)
+        public async Task SetStatus(string status)
         {
+            Log.Info($"Status| Set status to {status}");
             await OliBotClient.UpdateStatusAsync(new DiscordGame(status));
         }
 
@@ -188,7 +228,7 @@ namespace discord_bot
 
         #region Ensure Oli is in guild methods
 
-        private async Task EnsureOliInGuilds()
+        public async Task EnsureOliInGuilds()
         {
             foreach (KeyValuePair<ulong, DiscordGuild> entry in OliBotClient.Guilds)
             {
@@ -196,15 +236,17 @@ namespace discord_bot
             }
         }
 
-        private async Task EnsureOliInGuild(DiscordGuild guild)
+        public async Task<bool> EnsureOliInGuild(DiscordGuild guild)
         {
             if (guild.GetMemberAsync(Oliver4888Id).Result == null)
             {
                 await UnauthorisedBotUse(guild);
+                return false;
             }
+            return true;
         }
 
-        private async Task UnauthorisedBotUse(DiscordGuild guild)
+        public async Task UnauthorisedBotUse(DiscordGuild guild)
         {
             Log.Info($"Oliver4888 isn't in guild {guild.Name}({guild.Id})");
             await guild.GetDefaultChannel().SendMessageAsync("You are not authorised to use this bot!");
@@ -213,64 +255,36 @@ namespace discord_bot
 
         #endregion
 
-        #region DiscordClient_Events
+        #region Random Helpers
 
-        private async Task OliBot_Ready(ReadyEventArgs e)
+        public async Task<DiscordRole> GetMutedRole(DiscordGuild guild)
         {
-            Log.Info("General| Bot ready!");
-#if DEBUG
-            await SetStatus("Getting an upgrade");
-#else
-            await SetRandomStatus();
+            DiscordRole muted = null;
 
-            _statusTimer.Elapsed += async (sender, args) => await SetRandomStatus();
-            _statusTimer.Start();
-#endif
-            await EnsureOliInGuilds();
-        }
+            foreach (DiscordRole role in guild.Roles)
+            {
+                if (role.Name.ToLower() == "muted")
+                {
+                    muted = role;
+                    break;
+                }
+            }
 
-        private async Task OliBot_GuildCreated(GuildCreateEventArgs e)
-        {
-            Log.Info($"Added to guild {e.Guild.Name}({e.Guild.Id})");
-            await EnsureOliInGuild(e.Guild);
-        }
+            if (muted == null)
+                muted = await guild.CreateRoleAsync("Muted", mentionable: true);
 
-        private async Task OliBot_GuildDeleted(GuildDeleteEventArgs e)
-        {
-            Log.Info($"Removed from guild {e.Guild.Name}({e.Guild.Id})");
-        }
-
-        private async Task OliBot_MessageCreated(MessageCreateEventArgs e)
-        {
-#if DEBUG
-            if (e.Channel.Id != DevChannelId)
-#else
-            if (e.Channel.Id == DevChannelId)
-#endif
-                return;
-
-            Log.Info($"NewMessage| {e.Guild.Name}/{e.Channel.Name}: {GetUserNameFromDiscordUser(e.Guild, e.Message.Author)} said: {e.Message.Content}");
-
-            if (e.Author.IsBot)
-                return;
-
-            if (e.Message.Content.ToLower().Contains("olly") || e.Message.Content.ToLower().Contains("ollie"))
-                await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
-        }
-
-        private async Task OliBot_GuildMemberAdded(GuildMemberAddEventArgs e)
-        {
-            Log.Info($"GuildMemberAdded| {e.Guild.Name}({e.Guild.Id}) {GetUserNameFromDiscordUser(e.Guild, e.Member)}");
-        }
-
-        private async Task OliBot_GuildMemberRemoved(GuildMemberRemoveEventArgs e)
-        {
-            Log.Info($"GuildMemberRemoved| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}");
-
-            if (e.Member.Id == Oliver4888Id) await UnauthorisedBotUse(e.Guild);
+            return muted;
         }
 
         #endregion
+    }
 
+    public static class Extensions
+    {
+        public static void Reset(this Timer timer)
+        {
+            timer.Stop();
+            timer.Start();
+        }
     }
 }

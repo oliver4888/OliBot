@@ -44,7 +44,10 @@
       <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\packages\NLog.4.5.7\lib\net45\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.4.5.9\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="RedditSharp, Version=1.1.14.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RedditSharp.1.1.14\lib\net461\RedditSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -63,9 +66,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Classes\Helpers\Sites\Reddit\RedditHelper.cs" />
     <Compile Include="Classes\Helpers\Strat\StratHelper.cs" />
     <Compile Include="Classes\Helpers\Tokens\TokenHelper.cs" />
     <Compile Include="Classes\Commands\OliBotCommands.cs" />
+    <Compile Include="Classes\OliBot\OliBotEvents.cs" />
     <Compile Include="OliBotCore.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

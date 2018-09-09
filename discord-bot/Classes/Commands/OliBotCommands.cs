@@ -109,6 +109,39 @@ namespace discord_bot.Classes
             await ctx.RespondAsync($"{ctx.User.Mention}: {await StratHelper.UpdateStrats()}");
         }
 
+        [Command("clear")]
+        [Description("Clears messages from the current channel")]
+        public async Task Clear(
+            CommandContext ctx,
+            [Description("Number of messages to clear, max 100")]int num = 100
+            )
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            DiscordMember member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+
+            if (!(member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageMessages) || member.PermissionsIn(ctx.Channel).HasPermission(Permissions.Administrator)))
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            if (num > 100) num = 100;
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.Channel.DeleteMessagesAsync(await ctx.Channel.GetMessagesAsync(num));
+            DiscordMessage message = await ctx.RespondAsync($"Deleted {num.ToString()} message{(num == 1 ? "" : "s")} :white_check_mark:");
+            await Task.Delay(5000);
+            await message.DeleteAsync();
+        }
+
         [Command("remove-recent-reactions")]
         [Description("Removes all reactions from the specified channel for the past 100 messages")]
         [Aliases("rrr")]
@@ -127,19 +160,17 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            if (
-                ctx.User.Id != OliBotCore.Oliver4888Id &&
-                !ctx.Guild.GetMemberAsync(ctx.User.Id).Result.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageMessages))
+            DiscordMember member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+
+            if (!(member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageMessages) || member.PermissionsIn(ctx.Channel).HasPermission(Permissions.Administrator)))
             {
                 await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
                 return;
             }
 
-            if (limit > 100)
-                limit = 100;
+            if (limit > 100) limit = 100;
 
-            if (channel == null)
-                channel = ctx.Channel;
+            if (channel == null) channel = ctx.Channel;
 
             int reactionsRemoved = 0;
             int fromMessages = 0;
@@ -175,6 +206,167 @@ namespace discord_bot.Classes
             {
                 await ctx.RespondAsync($"{ctx.User.Mention}, Removed {reactionsRemoved} reaction{(reactionsRemoved > 0 ? "s" : "")} from {fromMessages} message{(fromMessages > 0 ? "s" : "")}!");
             }
+        }
+
+        [Command("check-mute")]
+        [Hidden]
+        [Aliases("cm")]
+        [Description("Ensures that the Muted role has Permission.SendMessages DENIED in every text channel for the current guild")]
+        public async Task CheckMute(CommandContext ctx)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            if (ctx.User.Id != OliBotCore.Oliver4888Id)
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            DiscordRole muted = await OliBotCore.Instance.GetMutedRole(ctx.Guild);
+
+            foreach (DiscordChannel channel in ctx.Guild.Channels)
+            {
+                if (channel.Type != ChannelType.Text)
+                    continue;
+
+                await channel.AddOverwriteAsync(muted, Permissions.None, Permissions.SendMessages);
+            }
+            await ctx.RespondAsync($"{ctx.User.Mention}, done!");
+        }
+
+        [Command("mute")]
+        public async Task Mute(
+            CommandContext ctx,
+            [Description("The user to mute")] DiscordUser user,
+            [RemainingText] [Description("Reason for the mute")] string reason = ""
+            )
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            DiscordMember member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+
+            if (!(member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageRoles) || member.PermissionsIn(ctx.Channel).HasPermission(Permissions.Administrator)))
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            DiscordRole muted = await OliBotCore.Instance.GetMutedRole(ctx.Guild);
+            await ctx.Guild.GrantRoleAsync(ctx.Guild.GetMemberAsync(user.Id).Result, muted, reason);
+
+            await ctx.RespondAsync($"{user.Mention} was muted for \"{(reason == "" ? "unspecified" : reason)}\" by {ctx.User.Mention}");
+        }
+
+        [Command("unmute")]
+        public async Task UnMute(
+            CommandContext ctx,
+            [Description("The user to unmute")] DiscordUser user,
+            [RemainingText] [Description("Reason for the unmute")] string reason = ""
+            )
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            DiscordMember member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+
+            if (!(member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageRoles) || member.PermissionsIn(ctx.Channel).HasPermission(Permissions.Administrator)))
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            DiscordRole muted = await OliBotCore.Instance.GetMutedRole(ctx.Guild);
+            await ctx.Guild.RevokeRoleAsync(ctx.Guild.GetMemberAsync(user.Id).Result, muted, reason);
+
+            await ctx.RespondAsync($"{user.Mention} was unmuted for \"{(reason == "" ? "unspecified" : reason)}\" by {ctx.User.Mention}");
+        }
+
+        [Command("add-status")]
+        [Aliases("+status")]
+        [Description("Adds a status that the bot can use")]
+        public async Task AddStatus(
+            CommandContext ctx,
+            [RemainingText] [Description("A status to add")] string status)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            if (ctx.User.Id != OliBotCore.Oliver4888Id)
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            if (OliBotCore.Instance.AddStatus(status))
+            {
+                string message = $"{ctx.User.Mention}, added status \"{status}\"!";
+                OliBotCore.Log.Info(message);
+                await ctx.RespondAsync(message);
+                return;
+            }
+            await ctx.RespondAsync($"{ctx.User.Mention}, something went wrong D:");
+        }
+
+        [Command("set-status")]
+        [Description("Sets the bot's status")]
+        [Aliases("status")]
+        public async Task SetStatus(
+    CommandContext ctx,
+    [RemainingText] [Description("Set the bots status to this")] string status)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            if (ctx.User.Id != OliBotCore.Oliver4888Id)
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            await OliBotCore.Instance.SetStatus(status);
+            OliBotCore.Instance.StatusTimer.Reset();
+        }
+
+        [Command("wow")]
+        [Description("Wow")]
+        public async Task Wow(CommandContext ctx)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/wow.jpg");
         }
     }
 }
