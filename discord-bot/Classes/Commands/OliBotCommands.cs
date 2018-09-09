@@ -368,5 +368,20 @@ namespace discord_bot.Classes
 
             await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/wow.jpg");
         }
+
+        [Command("doit")]
+        [Description("Just do it!")]
+        public async Task DoIt(CommandContext ctx)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/doit.gif");
+        }
     }
 }
