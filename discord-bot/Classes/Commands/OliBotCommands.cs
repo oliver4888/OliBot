@@ -9,6 +9,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using System.Text.RegularExpressions;
 
 namespace discord_bot.Classes
 {
@@ -113,7 +114,7 @@ namespace discord_bot.Classes
         [Description("Clears messages from the current channel")]
         public async Task Clear(
             CommandContext ctx,
-            [Description("Number of messages to clear, max 100")]int num = 100
+            [Description("Number of messages to clear, max 100")]int limit = 100
             )
         {
             if (ctx.User.IsBot
@@ -132,14 +133,73 @@ namespace discord_bot.Classes
                 return;
             }
 
-            if (num > 100) num = 100;
+            if (limit > 100) limit = 100;
 
             await ctx.Message.DeleteAsync();
 
-            await ctx.Channel.DeleteMessagesAsync(await ctx.Channel.GetMessagesAsync(num));
-            DiscordMessage message = await ctx.RespondAsync($"Deleted {num.ToString()} message{(num == 1 ? "" : "s")} :white_check_mark:");
+            await ctx.Channel.DeleteMessagesAsync(await ctx.Channel.GetMessagesAsync(limit));
+            DiscordMessage message = await ctx.RespondAsync($"Deleted {limit.ToString()} message{(limit == 1 ? "" : "s")} :white_check_mark:");
             await Task.Delay(5000);
             await message.DeleteAsync();
+        }
+
+        [Command("clear-mentions")]
+        [Aliases("clearm")]
+        [Description("Clears messages from the current channel that are only @ mentions")]
+        public async Task ClearMentions(
+            CommandContext ctx,
+            [Description("Number of messages to search through, max 100")]int limit = 100
+            )
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            DiscordMember member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+
+            if (!(member.PermissionsIn(ctx.Channel).HasPermission(Permissions.ManageMessages) || member.PermissionsIn(ctx.Channel).HasPermission(Permissions.Administrator)))
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            if (limit > 100) limit = 100;
+
+            await ctx.Message.DeleteAsync();
+
+            IReadOnlyList<DiscordMessage> discordMessages = await ctx.Channel.GetMessagesAsync(limit);
+            List<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
+
+            Parallel.ForEach(discordMessages, message =>
+            {
+                string[] words = message.Content.Split(new char[] { ' ', ',', '.', ':', '\t' });
+
+                bool isOnlyMentions = true;
+
+                foreach (string word in words)
+                {
+                    if (!Regex.Match(word, @"<@!?\d{18}>").Success)
+                    {
+                        isOnlyMentions = false;
+                        break;
+                    }
+                }
+
+                if (isOnlyMentions)
+                {
+                    messagesToDelete.Add(message);
+                }
+            });
+
+            await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
+
+            DiscordMessage response = await ctx.RespondAsync($"Deleted {messagesToDelete.Count.ToString()} message{(messagesToDelete.Count == 1 ? "" : "s")} :white_check_mark:");
+            await Task.Delay(5000);
+            await response.DeleteAsync();
         }
 
         [Command("remove-recent-reactions")]
@@ -382,6 +442,36 @@ namespace discord_bot.Classes
             ) return;
 
             await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/doit.gif");
+        }
+
+        [Command("pong")]
+        [Description("ping pong!")]
+        public async Task Pong(CommandContext ctx)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
+        }
+
+        [Command("get-help")]
+        [Description("Get some help!")]
+        public async Task StopGetHelp(CommandContext ctx)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
         }
     }
 }
