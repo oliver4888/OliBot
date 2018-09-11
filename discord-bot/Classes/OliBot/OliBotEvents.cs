@@ -119,7 +119,12 @@ namespace discord_bot.Classes
             DiscordRole muted = await OliBotCore.Instance.GetMutedRole(e.Guild);
 
             await e.Channel.AddOverwriteAsync(muted, Permissions.None, Permissions.SendMessages);
-            await e.Channel.SendMessageAsync($"Updated channel permissions for {muted.Mention}");
+
+            DiscordMessage message =  await e.Channel.SendMessageAsync($"Updated channel permissions for {muted.Mention}");
+
+            await Task.Delay(5000);
+            
+            await message.DeleteAsync();
         }
     }
 }
