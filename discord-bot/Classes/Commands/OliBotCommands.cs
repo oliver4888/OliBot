@@ -460,6 +460,7 @@ namespace discord_bot.Classes
         }
 
         [Command("get-help")]
+        [Aliases("stop-it", "stopit", "gethelp")]
         [Description("Get some help!")]
         public async Task StopGetHelp(CommandContext ctx)
         {

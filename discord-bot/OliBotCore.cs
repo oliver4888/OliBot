@@ -143,7 +143,7 @@ namespace discord_bot
             {
                 userName += $"({user.Username}#{user.Discriminator})";
             }
-            return userName;
+            return $"{userName}/{user.Id}";
         }
 
         #region Status Helpers
@@ -176,6 +176,7 @@ namespace discord_bot
                 string fileText = await reader.ReadToEndAsync();
                 _statuses = new List<string>(fileText.Split(new[] { Environment.NewLine }, StringSplitOptions.None));
             }
+            _statuses = CleanStatuses(_statuses);
         }
 
         private bool SaveStatuses()
@@ -192,8 +193,23 @@ namespace discord_bot
             return false;
         }
 
+        public List<string> CleanStatuses(List<string> statuses)
+        {
+            for (int i = statuses.Count - 1; i >= 0; i--)
+            {
+                if (string.IsNullOrWhiteSpace(statuses[i]))
+                {
+                    statuses.Remove(statuses[i]);
+                }
+            }
+            return statuses;
+        }
+
         public bool AddStatus(string status)
         {
+            if (string.IsNullOrWhiteSpace(status))
+                return false;
+
             _statuses.Add(status);
             return SaveStatuses();
         }
@@ -208,13 +224,13 @@ namespace discord_bot
             do
             {
                 status = _statuses[_random.Next(_statuses.Count)];
-            } while (status.Trim() == "" && _statusHistoryQueue.Contains(status));
+            } while (string.IsNullOrWhiteSpace(status) && _statusHistoryQueue.Contains(status));
 
             _statusHistoryQueue.Enqueue(status);
 
             if (_statusHistoryQueue.Count > _statuses.Count / 3)
                 _statusHistoryQueue.Dequeue();
-            
+
             await SetStatus(status);
         }
 

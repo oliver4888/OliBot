@@ -106,7 +106,7 @@ namespace discord_bot.Classes
 
         public async Task OliBot_GuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
-            OliBotCore.Log.Info($"GuildMemberRemoved| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}");
+            OliBotCore.Log.Info($"GuildMemberRemoved| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}/{e.Member.Id}");
 
             if (e.Member.Id == OliBotCore.Oliver4888Id) await OliBotCore.Instance.UnauthorisedBotUse(e.Guild);
         }
