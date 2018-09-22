@@ -128,6 +128,8 @@ namespace discord_bot
                 Log.Fatal(ex, "Reddit login failed!");
             }
 
+            OliBotCommands.ImgUrlBase = TokenHelper.GetTokenValue("ImgUrlBase");
+
             return;
         }
 

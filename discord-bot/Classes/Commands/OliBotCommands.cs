@@ -10,12 +10,15 @@ using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using System.Text.RegularExpressions;
+using System.IO;
 
 namespace discord_bot.Classes
 {
     public class OliBotCommands
     {
         // I don't know if there is an easier way to avoid bots and only reply in dev channel when debugging ¯\_(ツ)_/¯
+
+        public static string ImgUrlBase = "";
 
         [Command("src")]
         [Description("Get yourself a link to OliBot's source code!")]
@@ -414,6 +417,42 @@ namespace discord_bot.Classes
             OliBotCore.Instance.StatusTimer.Reset();
         }
 
+        [Command("kick")]
+        [Description("Kicks the specified member")]
+        public async Task Kick(
+            CommandContext ctx,
+            [Description("User to tick")] DiscordUser user,
+            [RemainingText] [Description("Reason for the kick")] string reason
+            )
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            DiscordMember member = await ctx.Guild.GetMemberAsync(ctx.User.Id);
+
+            if (!(member.PermissionsIn(ctx.Channel).HasPermission(Permissions.KickMembers) || member.PermissionsIn(ctx.Channel).HasPermission(Permissions.Administrator)))
+            {
+                await ctx.RespondAsync($"{ctx.User.Mention}, You are not authorized to use this command!");
+                return;
+            }
+
+            try
+            {
+                await member.RemoveAsync(reason);
+            }
+            catch (Exception ex)
+            {
+                OliBotCore.Log.Fatal(ex);
+            }
+
+            await ctx.RespondAsync("Eh");
+        }
+
         [Command("wow")]
         [Description("Wow")]
         public async Task Wow(CommandContext ctx)
@@ -426,7 +465,11 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/wow.jpg");
+            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/wow.jpg");
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("wow.jpg", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
         }
 
         [Command("doit")]
@@ -441,7 +484,11 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/doit.gif");
+            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/doit.gif");
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("doit.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
         }
 
         [Command("pong")]
@@ -456,7 +503,11 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
+            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
         }
 
         [Command("get-help")]
@@ -472,7 +523,47 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
+            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
         }
+
+        [Command("wrong")]
+        [Description("Wrong!")]
+        public async Task Wrong(CommandContext ctx)
+        {
+            if (ctx.User.IsBot
+#if DEBUG == false
+                || ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                || ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("trump-wrong.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
+        }
+
+        #region Helpers
+
+        private DiscordEmbed MemeCommandImage(string image, string username, string avatarUrl, string message = "")
+        {
+            DiscordEmbedBuilder discordEmbedBuilder = new DiscordEmbedBuilder()
+            {
+                Description = message,
+                ImageUrl = ImgUrlBase + image,
+                Color = new DiscordColor("#FF0000"),
+                Timestamp = DateTime.UtcNow
+            };
+
+            discordEmbedBuilder.WithFooter(username, avatarUrl);
+
+            return discordEmbedBuilder.Build();
+        }
+
+        #endregion
     }
 }
