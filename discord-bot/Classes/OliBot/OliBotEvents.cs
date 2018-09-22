@@ -69,6 +69,9 @@ namespace discord_bot.Classes
 
             bool correctedOli = false;
 
+            int redditMatches = 0;
+            bool respondedToMaxRedditMatches = false;
+
             foreach (string word in words)
             {
                 if (!correctedOli && (word == "olly" || word == "ollie"))
@@ -78,22 +81,37 @@ namespace discord_bot.Classes
                 }
                 else if (Regex.Match(word, RedditHelper.Pattern).Success)
                 {
-                    DiscordEmbedBuilder embed = null;
-                    try
+                    if (redditMatches < RedditHelper.MaxResponsesPerMessage)
                     {
-                        embed = await RedditHelper.GetSubredditEmbeded(word);
-                    }
-                    catch (Exception)
-                    { }
+                        redditMatches++;
 
-                    if (embed != null)
-                    {
-                        embed.WithFooter(e.Author.Username, e.Author.AvatarUrl);
-                        await e.Message.RespondAsync(embed: embed.Build());
+                        DiscordEmbedBuilder embed = null;
+                        try
+                        {
+                            embed = await RedditHelper.GetSubredditEmbeded(
+                                word,
+                                await e.Guild.GetMemberAsync(e.Author.Id)
+                                );
+                        }
+                        catch (Exception ex)
+                        {
+                            OliBotCore.Log.Error(ex);
+                        }
+
+                        if (embed != null)
+                        {
+                            await e.Message.RespondAsync(embed: embed.Build());
+                        }
+                        else
+                        {
+                            await e.Message.RespondAsync($"I tried to get {word}, but something went wrong D:");
+                        }
                     }
-                    else
+                    else if (!respondedToMaxRedditMatches)
                     {
-                        await e.Message.RespondAsync($"I tried to get {word}, but something went wrong D:");
+                        respondedToMaxRedditMatches = true;
+
+                        await e.Message.RespondAsync($"Sorry {e.Author.Mention}, I can only respond to {RedditHelper.MaxResponsesPerMessage} subreddits per message.");
                     }
                 }
             }
@@ -120,10 +138,10 @@ namespace discord_bot.Classes
 
             await e.Channel.AddOverwriteAsync(muted, Permissions.None, Permissions.SendMessages);
 
-            DiscordMessage message =  await e.Channel.SendMessageAsync($"Updated channel permissions for {muted.Mention}");
+            DiscordMessage message = await e.Channel.SendMessageAsync($"Updated channel permissions for {muted.Mention}");
 
             await Task.Delay(5000);
-            
+
             await message.DeleteAsync();
         }
     }

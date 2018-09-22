@@ -14,13 +14,16 @@ namespace discord_bot.Classes
     {
         private static Reddit _redditClient;
 
-        public static string Pattern = "r/[a-zA-Z0-9][a-zA-Z0-9_]{0,20}";
+        public static string Pattern = "^r/[a-zA-Z0-9][a-zA-Z0-9_]{0,20}";
         public static string RedditUrl = "https://old.reddit.com";
+
+        public static int MaxResponsesPerMessage = 2;
 
         public static void Login(string username, string password, string clientId, string secret)
         {
             try
             {
+                // That redirectURI was used in an example and just seems to work, so I'm not touching it
                 _redditClient = new Reddit(new BotWebAgent(username, password, clientId, secret, "http://127.0.0.1:65010"), false);
             }
             catch (Exception ex)
@@ -42,7 +45,7 @@ namespace discord_bot.Classes
             }
         }
 
-        public async static Task<DiscordEmbedBuilder> GetSubredditEmbeded(string subreddit)
+        public async static Task<DiscordEmbedBuilder> GetSubredditEmbeded(string subreddit, DiscordMember author)
         {
             Subreddit sub = await GetSubreddit(subreddit);
             if (sub != null)
@@ -56,7 +59,7 @@ namespace discord_bot.Classes
                 OliBotCore.Log.Debug(description);
                 var embed = new DiscordEmbedBuilder
                 {
-                    Color = new DiscordColor("#FF0000"),
+                    Color = author.Color,
                     Title = $"{sub.Title}",
                     Description = description ?? "",
                     Timestamp = DateTime.UtcNow,
@@ -86,6 +89,7 @@ namespace discord_bot.Classes
                     topPostsTxt += $"{(post.NSFW ? "NSFW: " : "")}[{title}]({RedditUrl}/comments/{post.Id}/) by [u/{post.AuthorName}]({RedditUrl}/u/{post.AuthorName}) {Environment.NewLine}";
                 }
                 embed.AddField("Top 3 posts (Weekly)", topPostsTxt);
+                embed.WithFooter(author.Username, author.AvatarUrl);
                 return embed;
             }
             return null;
