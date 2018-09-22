@@ -16,8 +16,6 @@ namespace discord_bot.Classes
 {
     public class OliBotCommands
     {
-        // I don't know if there is an easier way to avoid bots and only reply in dev channel when debugging ¯\_(ツ)_/¯
-
         public static string ImgUrlBase = "";
 
         [Command("src")]
@@ -25,11 +23,11 @@ namespace discord_bot.Classes
         [Aliases("source", "source-code", "sourcecode")]
         public async Task Src(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -40,9 +38,11 @@ namespace discord_bot.Classes
         [Description("ping pong!")]
         public async Task Ping(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -53,11 +53,11 @@ namespace discord_bot.Classes
         [Description("Get a link to the strats Google sheet")]
         public async Task Strats(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -74,11 +74,11 @@ namespace discord_bot.Classes
         [Description("Get a random strat")]
         public async Task Strat(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -96,11 +96,11 @@ namespace discord_bot.Classes
         [Aliases("updatestrats", "strats-update", "stratsupdate")]
         public async Task UpdateStrats(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -120,11 +120,11 @@ namespace discord_bot.Classes
             [Description("Number of messages to clear, max 100")]int limit = 100
             )
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -154,11 +154,11 @@ namespace discord_bot.Classes
             [Description("Number of messages to search through, max 100")]int limit = 100
             )
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -215,11 +215,11 @@ namespace discord_bot.Classes
             [Description("How many messages should OliBot remove messages from, max 100")] int limit = 100,
             [RemainingText] [Description("Why are the reactions being removed")] string reason = null)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -277,11 +277,11 @@ namespace discord_bot.Classes
         [Description("Ensures that the Muted role has Permission.SendMessages DENIED in every text channel for the current guild")]
         public async Task CheckMute(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -310,11 +310,11 @@ namespace discord_bot.Classes
             [RemainingText] [Description("Reason for the mute")] string reason = ""
             )
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -339,11 +339,11 @@ namespace discord_bot.Classes
             [RemainingText] [Description("Reason for the unmute")] string reason = ""
             )
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -368,11 +368,11 @@ namespace discord_bot.Classes
             CommandContext ctx,
             [RemainingText] [Description("A status to add")] string status)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -399,11 +399,11 @@ namespace discord_bot.Classes
     CommandContext ctx,
     [RemainingText] [Description("Set the bots status to this")] string status)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -425,11 +425,11 @@ namespace discord_bot.Classes
             [RemainingText] [Description("Reason for the kick")] string reason
             )
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -457,11 +457,11 @@ namespace discord_bot.Classes
         [Description("Wow")]
         public async Task Wow(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -474,11 +474,11 @@ namespace discord_bot.Classes
         [Description("Just do it!")]
         public async Task DoIt(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -491,11 +491,11 @@ namespace discord_bot.Classes
         [Description("ping pong!")]
         public async Task Pong(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -509,11 +509,11 @@ namespace discord_bot.Classes
         [Description("Get some help!")]
         public async Task StopGetHelp(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
@@ -526,17 +526,52 @@ namespace discord_bot.Classes
         [Description("Wrong!")]
         public async Task Wrong(CommandContext ctx)
         {
-            if (ctx.User.IsBot
+            if (
 #if DEBUG == false
-                || ctx.Channel.Id == OliBotCore.DevChannelId
+                ctx.Channel.Id == OliBotCore.DevChannelId
 #else
-                || ctx.Channel.Id != OliBotCore.DevChannelId
+                ctx.Channel.Id != OliBotCore.DevChannelId
 #endif
             ) return;
 
             await ctx.Message.DeleteAsync();
 
             await ctx.RespondAsync(embed: MemeCommandImage("trump-wrong.gif", ctx));
+        }
+
+        [Command("windows")]
+        [Description("Activate windows ffs!")]
+        [Aliases("activate-windows", "ffs-odin")]
+        public async Task Windows(CommandContext ctx)
+        {
+            if (
+#if DEBUG == false
+                ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("activate-windows.png", ctx));
+        }
+
+        [Command("thermal-paste")]
+        [Description("How much thermal paste do you need?")]
+        public async Task ThermalPaste(CommandContext ctx)
+        {
+            if (
+#if DEBUG == false
+                ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("thermal-paste.png", ctx));
         }
 
         #region Helpers
