@@ -28,6 +28,8 @@ namespace discord_bot
         private static readonly string _tokenFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tokens.xml");
         private static readonly string _statusesFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "statuses.txt");
 
+        public static readonly string CommandPrefix = "?";
+
         public readonly Timer StatusTimer = new Timer(30 * (60 * 1000)); // Every 30 minutes
         private static List<string> _statuses;
         private static Queue<string> _statusHistoryQueue = new Queue<string>();
@@ -90,7 +92,7 @@ namespace discord_bot
 
                 _commands = OliBotClient.UseCommandsNext(new CommandsNextConfiguration
                 {
-                    StringPrefix = "?",
+                    StringPrefix = CommandPrefix,
                     CaseSensitive = false
                 });
 

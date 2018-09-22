@@ -465,11 +465,9 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/wow.jpg");
-
             await ctx.Message.DeleteAsync();
 
-            await ctx.RespondAsync(embed: MemeCommandImage("wow.jpg", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
+            await ctx.RespondAsync(embed: MemeCommandImage("wow.jpg", ctx));
         }
 
         [Command("doit")]
@@ -484,11 +482,9 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/doit.gif");
-
             await ctx.Message.DeleteAsync();
 
-            await ctx.RespondAsync(embed: MemeCommandImage("doit.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
+            await ctx.RespondAsync(embed: MemeCommandImage("doit.gif", ctx));
         }
 
         [Command("pong")]
@@ -503,11 +499,9 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
-
             await ctx.Message.DeleteAsync();
 
-            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
+            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx));
         }
 
         [Command("get-help")]
@@ -523,11 +517,9 @@ namespace discord_bot.Classes
 #endif
             ) return;
 
-            //await ctx.RespondWithFileAsync($"{AppDomain.CurrentDomain.BaseDirectory}/content/images/stop-get-help.gif");
-
             await ctx.Message.DeleteAsync();
 
-            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
+            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx));
         }
 
         [Command("wrong")]
@@ -544,22 +536,22 @@ namespace discord_bot.Classes
 
             await ctx.Message.DeleteAsync();
 
-            await ctx.RespondAsync(embed: MemeCommandImage("trump-wrong.gif", ctx.Member.Username, ctx.Member.AvatarUrl, ctx.RawArgumentString));
+            await ctx.RespondAsync(embed: MemeCommandImage("trump-wrong.gif", ctx));
         }
 
         #region Helpers
 
-        private DiscordEmbed MemeCommandImage(string image, string username, string avatarUrl, string message = "")
+        private DiscordEmbed MemeCommandImage(string image, CommandContext ctx)
         {
             DiscordEmbedBuilder discordEmbedBuilder = new DiscordEmbedBuilder()
             {
-                Description = message,
+                Description = ctx.RawArgumentString,
                 ImageUrl = ImgUrlBase + image,
-                Color = new DiscordColor("#FF0000"),
+                Color = ctx.Member.Color,
                 Timestamp = DateTime.UtcNow
             };
 
-            discordEmbedBuilder.WithFooter(username, avatarUrl);
+            discordEmbedBuilder.WithFooter($"{ctx.Member.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.Member.AvatarUrl);
 
             return discordEmbedBuilder.Build();
         }
