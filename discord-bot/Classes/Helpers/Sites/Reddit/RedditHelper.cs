@@ -50,13 +50,13 @@ namespace discord_bot.Classes
             Subreddit sub = await GetSubreddit(subreddit);
             if (sub != null)
             {
-                OliBotCore.Log.Debug($"Seen subreddit {subreddit}");
+                //OliBotCore.Log.Debug($"Seen subreddit {subreddit}");
                 string description = sub.Description;
                 if (description?.Length > 300)
                 {
                     description = description.Substring(0, 300) + "...";
                 }
-                OliBotCore.Log.Debug(description);
+                //OliBotCore.Log.Debug(description);
                 var embed = new DiscordEmbedBuilder
                 {
                     Color = author.Color,

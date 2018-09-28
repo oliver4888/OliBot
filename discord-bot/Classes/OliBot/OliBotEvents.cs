@@ -74,7 +74,7 @@ namespace discord_bot.Classes
 
             foreach (string word in words)
             {
-                if (!correctedOli && (word == "olly" || word == "ollie"))
+                if (!correctedOli && (word.ToLower() == "olly" || word.ToLower() == "ollie"))
                 {
                     await e.Message.RespondAsync($"{e.Author.Mention} the correct spelling is \"Oli\"");
                     correctedOli = true;
