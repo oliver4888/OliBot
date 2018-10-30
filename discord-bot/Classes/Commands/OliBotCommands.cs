@@ -177,15 +177,17 @@ namespace discord_bot.Classes
             IReadOnlyList<DiscordMessage> discordMessages = await ctx.Channel.GetMessagesAsync(limit);
             List<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
 
+            char[] wordSplitters = new char[] { ' ', ',', '.', ':', '\t' };
+
             Parallel.ForEach(discordMessages, message =>
             {
-                string[] words = message.Content.Split(new char[] { ' ', ',', '.', ':', '\t' });
+                string[] words = message.Content.Split(wordSplitters);
 
                 bool isOnlyMentions = true;
 
                 foreach (string word in words)
                 {
-                    if (!Regex.Match(word, @"<@!?\d{18}>").Success)
+                    if (!Regex.Match(word, @"^<@!?\d{18}>$").Success)
                     {
                         isOnlyMentions = false;
                         break;
@@ -572,6 +574,24 @@ namespace discord_bot.Classes
             await ctx.Message.DeleteAsync();
 
             await ctx.RespondAsync(embed: MemeCommandImage("thermal-paste.png", ctx));
+        }
+
+        [Command("space-engineers")]
+        [Description("The people's game")]
+        [Aliases("se")]
+        public async Task SpaceEngineers(CommandContext ctx)
+        {
+            if (
+#if DEBUG == false
+                ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("space-engineers.png", ctx));
         }
 
         #region Helpers
