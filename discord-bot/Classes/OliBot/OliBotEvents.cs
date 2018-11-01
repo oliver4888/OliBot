@@ -22,6 +22,9 @@ namespace discord_bot.Classes
 
             OliBotCore.Instance.StatusTimer.Elapsed += async (sender, args) => await OliBotCore.Instance.SetRandomStatus();
             OliBotCore.Instance.StatusTimer.Start();
+
+            OliBotCore.Instance.JackTimer.Elapsed += async (sender, args) => await OliBotCore.Instance.GoAwayJack();
+            OliBotCore.Instance.JackTimer.Start();
 #endif
             await OliBotCore.Instance.EnsureOliInGuilds();
 

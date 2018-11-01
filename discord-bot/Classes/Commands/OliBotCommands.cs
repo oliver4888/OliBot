@@ -591,7 +591,7 @@ namespace discord_bot.Classes
 
             await ctx.Message.DeleteAsync();
 
-            await ctx.RespondAsync(embed: MemeCommandImage("space-engineers.png", ctx));
+            await ctx.RespondAsync(embed: MemeCommandImage("space-engineers.jpg", ctx));
         }
 
         #region Helpers

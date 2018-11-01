@@ -43,6 +43,9 @@ namespace discord_bot
 
         public static ulong CSGOStratGuildId = 306171979583717386;
 
+        public static ulong JackId = 182866033860673538;
+        public readonly Timer JackTimer = new Timer(60 * 1000);
+
         public static Logger Log = LogManager.GetLogger("OliBot");
 
         private static OliBotEvents _events = new OliBotEvents();
@@ -294,6 +297,20 @@ namespace discord_bot
                 muted = await guild.CreateRoleAsync("Muted", mentionable: true);
 
             return muted;
+        }
+
+        public async Task GoAwayJack()
+        {
+            try
+            {
+                DiscordGuild guild = await OliBotClient.GetGuildAsync(CSGOStratGuildId);
+                DiscordMember jack = await guild.GetMemberAsync(JackId);
+                await jack.ModifyAsync(Regex.Replace(jack.DisplayName ?? jack.Nickname, @"[^a-zA-Z0-9 ]", ""));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex);
+            }
         }
 
         #endregion
