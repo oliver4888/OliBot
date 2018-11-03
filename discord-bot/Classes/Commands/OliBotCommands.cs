@@ -443,16 +443,20 @@ namespace discord_bot.Classes
                 return;
             }
 
+            DiscordMember kickMember = await ctx.Guild.GetMemberAsync(user.Id);
+
             try
             {
-                await member.RemoveAsync(reason);
+                await kickMember.RemoveAsync(reason);
             }
             catch (Exception ex)
             {
+                await ctx.RespondAsync("Ah :poop: something went wrong.");
                 OliBotCore.Log.Fatal(ex);
+                return;
             }
 
-            await ctx.RespondAsync("Eh");
+            await ctx.RespondAsync("Goodbye! :wave: They're gone.");
         }
 
         [Command("wow")]
