@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿using OliBot.Classes.Helpers.Sites.Reddit;
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System;
@@ -8,11 +9,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace discord_bot.Classes
+namespace OliBot.Classes.Events
 {
-    public class OliBotEvents
+    public static class OliBotEvents
     {
-        public async Task OliBot_Ready(ReadyEventArgs e)
+        public static async Task OliBot_Ready(ReadyEventArgs e)
         {
             OliBotCore.Log.Info("General| Bot ready!");
 #if DEBUG
@@ -22,16 +23,13 @@ namespace discord_bot.Classes
 
             OliBotCore.Instance.StatusTimer.Elapsed += async (sender, args) => await OliBotCore.Instance.SetRandomStatus();
             OliBotCore.Instance.StatusTimer.Start();
-
-            OliBotCore.Instance.JackTimer.Elapsed += async (sender, args) => await OliBotCore.Instance.GoAwayJack();
-            OliBotCore.Instance.JackTimer.Start();
 #endif
             await OliBotCore.Instance.EnsureOliInGuilds();
 
             // TODO: Check through all text channels for the muted role and ensure that it is denied the Permission.SendMessages
         }
 
-        public async Task OliBot_GuildCreated(GuildCreateEventArgs e)
+        public static async Task OliBot_GuildCreated(GuildCreateEventArgs e)
         {
             OliBotCore.Log.Info($"Added to guild {e.Guild.Name}({e.Guild.Id})");
             bool oliInGuild = await OliBotCore.Instance.EnsureOliInGuild(e.Guild);
@@ -49,12 +47,10 @@ namespace discord_bot.Classes
             }
         }
 
-        public async Task OliBot_GuildDeleted(GuildDeleteEventArgs e)
-        {
+        public static async Task OliBot_GuildDeleted(GuildDeleteEventArgs e) =>
             OliBotCore.Log.Info($"Removed from guild {e.Guild.Name}({e.Guild.Id})");
-        }
 
-        public async Task OliBot_MessageCreated(MessageCreateEventArgs e)
+        public static async Task OliBot_MessageCreated(MessageCreateEventArgs e)
         {
 #if DEBUG
             if (e.Channel.Id != OliBotCore.DevChannelId)
@@ -120,19 +116,17 @@ namespace discord_bot.Classes
             }
         }
 
-        public async Task OliBot_GuildMemberAdded(GuildMemberAddEventArgs e)
-        {
+        public static async Task OliBot_GuildMemberAdded(GuildMemberAddEventArgs e) =>
             OliBotCore.Log.Info($"GuildMemberAdded| {e.Guild.Name}({e.Guild.Id}) {OliBotCore.Instance.GetUserNameFromDiscordUser(e.Guild, e.Member)}");
-        }
 
-        public async Task OliBot_GuildMemberRemoved(GuildMemberRemoveEventArgs e)
+        public static async Task OliBot_GuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
             OliBotCore.Log.Info($"GuildMemberRemoved| {e.Guild.Name}({e.Guild.Id}) {e.Member.Username}#{e.Member.Discriminator}/{e.Member.Id}");
 
             if (e.Member.Id == OliBotCore.Oliver4888Id) await OliBotCore.Instance.UnauthorisedBotUse(e.Guild);
         }
 
-        public async Task OliBotCore_ChannelCreated(ChannelCreateEventArgs e)
+        public static async Task OliBotCore_ChannelCreated(ChannelCreateEventArgs e)
         {
             if (e.Channel.Type != ChannelType.Text)
                 return;
