@@ -1,18 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using OliBot;
-using OliBot.Classes;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using System.Text.RegularExpressions;
-using System.IO;
+
 using OliBot.Classes.Extensions;
-using OliBot.Classes.Helpers.Strat;
+//using OliBot.Classes.Helpers.Strat;
 
 namespace OliBot.Classes.Commands
 {
@@ -51,69 +48,69 @@ namespace OliBot.Classes.Commands
             await ctx.RespondAsync($"{ctx.User.Mention} pong!");
         }
 
-        [Command("strats")]
-        [Description("Get a link to the strats Google sheet")]
-        public async Task Strats(CommandContext ctx)
-        {
-            if (
-#if DEBUG == false
-                ctx.Channel.Id == OliBotCore.DevChannelId
-#else
-                ctx.Channel.Id != OliBotCore.DevChannelId
-#endif
-            ) return;
+//        [Command("strats")]
+//        [Description("Get a link to the strats Google sheet")]
+//        public async Task Strats(CommandContext ctx)
+//        {
+//            if (
+//#if DEBUG == false
+//                ctx.Channel.Id == OliBotCore.DevChannelId
+//#else
+//                ctx.Channel.Id != OliBotCore.DevChannelId
+//#endif
+//            ) return;
 
-            if (ctx.Guild.Id != OliBotCore.CSGOStratGuildId)
-            {
-                await ctx.RespondAsync($"{ctx.User.Mention}, this command isn't available in {ctx.Guild.Name}");
-                return;
-            }
+//            if (ctx.Guild.Id != OliBotCore.CSGOStratGuildId)
+//            {
+//                await ctx.RespondAsync($"{ctx.User.Mention}, this command isn't available in {ctx.Guild.Name}");
+//                return;
+//            }
 
-            await ctx.RespondAsync($"{ctx.User.Mention}, request access on this sheet to add strats https://docs.google.com/spreadsheets/d/18E2BtjDeYESqs6Zo6tELthR20aDaBFlYRx4weXCFSOE/edit#gid=0");
-        }
+//            await ctx.RespondAsync($"{ctx.User.Mention}, request access on this sheet to add strats https://docs.google.com/spreadsheets/d/18E2BtjDeYESqs6Zo6tELthR20aDaBFlYRx4weXCFSOE/edit#gid=0");
+//        }
 
-        [Command("strat")]
-        [Description("Get a random strat")]
-        public async Task Strat(CommandContext ctx)
-        {
-            if (
-#if DEBUG == false
-                ctx.Channel.Id == OliBotCore.DevChannelId
-#else
-                ctx.Channel.Id != OliBotCore.DevChannelId
-#endif
-            ) return;
+//        [Command("strat")]
+//        [Description("Get a random strat")]
+//        public async Task Strat(CommandContext ctx)
+//        {
+//            if (
+//#if DEBUG == false
+//                ctx.Channel.Id == OliBotCore.DevChannelId
+//#else
+//                ctx.Channel.Id != OliBotCore.DevChannelId
+//#endif
+//            ) return;
 
-            if (ctx.Guild.Id != OliBotCore.CSGOStratGuildId)
-            {
-                await ctx.RespondAsync($"{ctx.User.Mention}, this command isn't available in {ctx.Guild.Name}");
-                return;
-            }
+//            if (ctx.Guild.Id != OliBotCore.CSGOStratGuildId)
+//            {
+//                await ctx.RespondAsync($"{ctx.User.Mention}, this command isn't available in {ctx.Guild.Name}");
+//                return;
+//            }
 
-            await ctx.RespondAsync($"{ctx.User.Mention}: {StratHelper.GetRandomStrat()}");
-        }
+//            await ctx.RespondAsync($"{ctx.User.Mention}: {StratHelper.GetRandomStrat()}");
+//        }
 
-        [Command("update-strats")]
-        [Description("Updates OliBot's cache of the strats list from the Google sheet")]
-        [Aliases("updatestrats", "strats-update", "stratsupdate")]
-        public async Task UpdateStrats(CommandContext ctx)
-        {
-            if (
-#if DEBUG == false
-                ctx.Channel.Id == OliBotCore.DevChannelId
-#else
-                ctx.Channel.Id != OliBotCore.DevChannelId
-#endif
-            ) return;
+//        [Command("update-strats")]
+//        [Description("Updates OliBot's cache of the strats list from the Google sheet")]
+//        [Aliases("updatestrats", "strats-update", "stratsupdate")]
+//        public async Task UpdateStrats(CommandContext ctx)
+//        {
+//            if (
+//#if DEBUG == false
+//                ctx.Channel.Id == OliBotCore.DevChannelId
+//#else
+//                ctx.Channel.Id != OliBotCore.DevChannelId
+//#endif
+//            ) return;
 
-            if (ctx.Guild.Id != OliBotCore.CSGOStratGuildId)
-            {
-                await ctx.RespondAsync($"{ctx.User.Mention}, this command isn't available in {ctx.Guild.Name}");
-                return;
-            }
+//            if (ctx.Guild.Id != OliBotCore.CSGOStratGuildId)
+//            {
+//                await ctx.RespondAsync($"{ctx.User.Mention}, this command isn't available in {ctx.Guild.Name}");
+//                return;
+//            }
 
-            await ctx.RespondAsync($"{ctx.User.Mention}: {StratHelper.UpdateStrats()}");
-        }
+//            await ctx.RespondAsync($"{ctx.User.Mention}: {StratHelper.UpdateStrats()}");
+//        }
 
         [Command("clear")]
         [Description("Clears messages from the current channel")]
@@ -495,23 +492,6 @@ namespace OliBot.Classes.Commands
             await ctx.RespondAsync(embed: MemeCommandImage("doit.gif", ctx));
         }
 
-        [Command("pong")]
-        [Description("ping pong!")]
-        public async Task Pong(CommandContext ctx)
-        {
-            if (
-#if DEBUG == false
-                ctx.Channel.Id == OliBotCore.DevChannelId
-#else
-                ctx.Channel.Id != OliBotCore.DevChannelId
-#endif
-            ) return;
-
-            await ctx.Message.DeleteAsync();
-
-            await ctx.RespondAsync(embed: MemeCommandImage("stop-get-help.gif", ctx));
-        }
-
         [Command("get-help")]
         [Aliases("stop-it", "stopit", "gethelp")]
         [Description("Get some help!")]
@@ -616,6 +596,24 @@ namespace OliBot.Classes.Commands
             await ctx.Message.DeleteAsync();
 
             await ctx.RespondAsync(embed: MemeCommandImage("dead-horse.jpg", ctx));
+        }
+
+        [Command("pikachu")]
+        [Description("Pika?")]
+        [Aliases("pika", "shocked-pikachu", "shocked-pika")]
+        public async Task Pikachu(CommandContext ctx)
+        {
+            if (
+#if DEBUG == false
+                ctx.Channel.Id == OliBotCore.DevChannelId
+#else
+                ctx.Channel.Id != OliBotCore.DevChannelId
+#endif
+            ) return;
+
+            await ctx.Message.DeleteAsync();
+
+            await ctx.RespondAsync(embed: MemeCommandImage("pika.jpg", ctx));
         }
 
 
