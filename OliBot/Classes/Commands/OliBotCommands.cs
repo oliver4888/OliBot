@@ -122,6 +122,8 @@ namespace OliBot.Classes.Commands
 
                 foreach (string word in words)
                 {
+                    if (string.IsNullOrWhiteSpace(word)) break;
+
                     if (!Regex.Match(word, @"^<@!?\d{18}>$").Success)
                     {
                         isOnlyMentions = false;
@@ -568,6 +570,18 @@ namespace OliBot.Classes.Commands
             discordEmbedBuilder.WithFooter($"{ctx.Member.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.Member.AvatarUrl);
 
             return discordEmbedBuilder.Build();
+        }
+
+        private bool ShouldRespond(ulong channelId)
+        {
+            channelId == OliBotCore
+            if (
+#if DEBUG == false
+                channelId  == OliBotCore.DevChannelId
+#else
+                channelId != OliBotCore.DevChannelId
+#endif
+            ) return;
         }
 
         #endregion
