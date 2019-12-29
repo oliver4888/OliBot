@@ -1,23 +1,25 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 
 using DSharpPlus;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Configuration;
 
 namespace OliBot
 {
-    
+
     public class BotCore
     {
         static DiscordClient discord;
+        static IConfigurationSection _config;
+
+        public BotCore(IConfigurationRoot configuration) => _config = configuration.GetSection("BotCore");
+
         public async Task Start()
         {
-            string token = await File.ReadAllTextAsync(Path.Combine(Environment.CurrentDirectory, "token.txt"));
-
             discord = new DiscordClient(new DiscordConfiguration
             {
-                Token = token,
+                Token = _config["Token"],
                 TokenType = TokenType.Bot
             });
 
@@ -36,11 +38,9 @@ namespace OliBot
                 Console.WriteLine("Ready!");
             };
 
-            discord.SocketErrored += async e => {
-                Console.WriteLine(e.Exception);
-            };
+            string status = _config["InitialStatus"];
 
-            await discord.ConnectAsync(new DiscordActivity("v2 dev"));
+            await discord.ConnectAsync(status != null ? new DiscordActivity(status) : null);
 
             await Task.Delay(-1);
         }
