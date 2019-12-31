@@ -6,6 +6,8 @@ using Microsoft.Extensions.Configuration;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
+using OliBot.Commands;
+
 namespace OliBot
 {
 
@@ -13,14 +15,14 @@ namespace OliBot
     {
         static DiscordClient _discord;
         static IConfigurationSection _config;
-        static CommandManager _commandManager;
+        static ICommandManager _commandManager;
 
         public static DateTime StartTime { get; private set; }
 
-        public BotCore(IConfigurationRoot configuration)
+        public BotCore(IConfigurationRoot configuration, ICommandManager commandManager)
         {
             _config = configuration.GetSection("BotCore");
-            _commandManager = new CommandManager();
+            _commandManager = commandManager;
         }
 
         public async Task Start()

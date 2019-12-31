@@ -1,7 +1,10 @@
 ﻿using System;
 using System.IO;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using OliBot.Commands;
 
 namespace OliBot
 {
@@ -13,7 +16,10 @@ namespace OliBot
         {
             IServiceCollection services = new ServiceCollection();
 
-            services.AddConfiguration().AddSingleton<BotCore>();
+            services
+                .AddConfiguration()
+                .AddSingleton<ICommandManager, CommandManager>()
+                .AddSingleton<BotCore>();
 
             return services.BuildServiceProvider();
         }

@@ -9,12 +9,12 @@ using DSharpPlus.Entities;
 
 using Common;
 
-namespace OliBot
+namespace OliBot.Commands
 {
-    public class CommandManager
+    public class CommandManager : ICommandManager
     {
         IDictionary<string, MethodInfo> _commands = new Dictionary<string, MethodInfo>();
-        public DiscordClient Discord;
+        public DiscordClient Discord { get; set; }
 
         public CommandManager()
         {
