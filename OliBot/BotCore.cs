@@ -1,46 +1,57 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Configuration;
+
 using DSharpPlus;
 using DSharpPlus.Entities;
-using Microsoft.Extensions.Configuration;
 
 namespace OliBot
 {
 
     public class BotCore
     {
-        static DiscordClient discord;
+        static DiscordClient _discord;
         static IConfigurationSection _config;
+        static CommandManager _commandManager;
 
-        public BotCore(IConfigurationRoot configuration) => _config = configuration.GetSection("BotCore");
+        public static DateTime StartTime { get; private set; }
+
+        public BotCore(IConfigurationRoot configuration)
+        {
+            _config = configuration.GetSection("BotCore");
+            _commandManager = new CommandManager();
+        }
 
         public async Task Start()
         {
-            discord = new DiscordClient(new DiscordConfiguration
+            _discord = new DiscordClient(new DiscordConfiguration
             {
                 Token = _config["Token"],
                 TokenType = TokenType.Bot
             });
 
-            discord.MessageCreated += async e =>
+            _commandManager.Discord = _discord;
+
+            _discord.MessageCreated += async e =>
             {
                 if (e.Author.IsBot) return;
 
-                Console.WriteLine(e.Author.Username);
-
-                if (e.Message.Content.ToLower().StartsWith("ping"))
-                    await e.Message.RespondAsync("pong!");
+                if (e.Message.Content.StartsWith(_config["CommandPrefix"]))
+                    await _commandManager.Handle(e.Message);
             };
 
-            discord.Ready += async e =>
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+            _discord.Ready += async e =>
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
             {
                 Console.WriteLine("Ready!");
+                StartTime = DateTime.Now;
             };
 
             string status = _config["InitialStatus"];
 
-            await discord.ConnectAsync(status != null ? new DiscordActivity(status) : null);
+            await _discord.ConnectAsync(status != null ? new DiscordActivity(status) : null);
 
             await Task.Delay(-1);
         }
