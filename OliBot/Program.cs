@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using OliBot.Commands;
+using OliBot.Utilities;
 
 namespace OliBot
 {
@@ -13,40 +12,22 @@ namespace OliBot
     {
         static void Main()
         {
-            string moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
+            ModuleLoader.LoadModules();
 
-            if (!Directory.Exists(moduleFolder))
-                Directory.CreateDirectory(moduleFolder);
-
-            IEnumerable<string> modules = Directory.EnumerateFiles(moduleFolder);
-
-            foreach (string module in modules)
-                Assembly.LoadFile(module);
-
-            ConfigureServices().GetRequiredService<BotCore>().Start().ConfigureAwait(false).GetAwaiter().GetResult();
+            ConfigureServices(new ServiceCollection()).GetRequiredService<BotCore>().Start().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        static IServiceProvider ConfigureServices()
-        {
-            IServiceCollection services = new ServiceCollection();
-
+        static IServiceProvider ConfigureServices(IServiceCollection services) =>
             services
                 .AddConfiguration()
                 .AddSingleton<ICommandManager, CommandManager>()
-                .AddSingleton<BotCore>();
+                .AddSingleton<BotCore>()
+                .BuildServiceProvider();
 
-            return services.BuildServiceProvider();
-        }
-
-        static IServiceCollection AddConfiguration(this IServiceCollection services)
-        {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
+        static IServiceCollection AddConfiguration(this IServiceCollection services) =>
+            services.AddSingleton(new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false)
-                .Build();
-
-            services.AddSingleton(configuration);
-            return services;
-        }
+                .Build());
     }
 }
