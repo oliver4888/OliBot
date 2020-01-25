@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
-
+using System.Reflection;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +11,20 @@ namespace OliBot
 {
     static class Program
     {
-        static void Main() => ConfigureServices().GetRequiredService<BotCore>().Start().ConfigureAwait(false).GetAwaiter().GetResult();
+        static void Main()
+        {
+            string moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
+
+            if (!Directory.Exists(moduleFolder))
+                Directory.CreateDirectory(moduleFolder);
+
+            IEnumerable<string> modules = Directory.EnumerateFiles(moduleFolder);
+
+            foreach (string module in modules)
+                Assembly.LoadFile(module);
+
+            ConfigureServices().GetRequiredService<BotCore>().Start().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
 
         static IServiceProvider ConfigureServices()
         {

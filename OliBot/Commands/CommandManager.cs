@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
-using Common;
+using Common.Attributes;
 
 namespace OliBot.Commands
 {
@@ -18,17 +18,15 @@ namespace OliBot.Commands
 
         public CommandManager()
         {
-            IEnumerable<MethodInfo> methods = Assembly
-                .GetExecutingAssembly()
-                .GetTypes()
+            IEnumerable<MethodInfo> methods = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
                 .SelectMany(t => t.GetMethods())
                 .Where(m => m.GetCustomAttributes(typeof(CommandAttribute), false).Length > 0);
 
             foreach (MethodInfo method in methods)
                 _commands.Add(method.Name.ToLower(), method);
 
-            Console.WriteLine($"Loaded {_commands.Count()} commands!");
-            Console.WriteLine($"Loaded commands: {string.Join(", ", _commands.Keys)}");
+            Console.WriteLine($"Loaded {_commands.Count()} commands: {string.Join(", ", _commands.Keys)}");
         }
 
         public async Task Handle(DiscordMessage message)

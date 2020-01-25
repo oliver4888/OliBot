@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Configuration;
 
 using DSharpPlus;
@@ -10,7 +9,6 @@ using OliBot.Commands;
 
 namespace OliBot
 {
-
     public class BotCore
     {
         static DiscordClient _discord;
@@ -27,6 +25,8 @@ namespace OliBot
 
         public async Task Start()
         {
+            StartTime = DateTime.Now;
+
             _discord = new DiscordClient(new DiscordConfiguration
             {
                 Token = _config["Token"],
@@ -45,11 +45,8 @@ namespace OliBot
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             _discord.Ready += async e =>
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-            {
                 Console.WriteLine("Ready!");
-                StartTime = DateTime.Now;
-            };
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
             string status = _config["InitialStatus"];
 

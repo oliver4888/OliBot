@@ -5,7 +5,8 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 
-using Common;
+using Common.Attributes;
+using Common.Extensions;
 
 namespace OliBot
 {
@@ -20,12 +21,27 @@ namespace OliBot
         [Command]
         public static async Task Stats(DiscordClient discord, DiscordMessage message)
         {
-            string uptime = (DateTime.Now - BotCore.StartTime).ToString(@"d\.hh\:mm\:ss");
+            string uptime = (DateTime.Now - BotCore.StartTime).ToString(@"d\ hh\:mm");
             int guilds = discord.Guilds.Count;
-            int members = discord.Guilds.Values.Select(g => g.MemberCount).Sum();
-            int uniqueUsers = discord.Guilds.Values.SelectMany(g => g.Members.Values.Select(m => m.Id)).Distinct().Count();
+            int users = discord.Guilds.Values.Select(g => g.MemberCount).Sum();
+            
 
-            await message.RespondAsync($"Uptime: {uptime}, Guilds: {guilds}, Members: {members}, Unique Users: {uniqueUsers}");
+            DiscordEmbedBuilder builder = new DiscordEmbedBuilder
+            {
+                Title = discord.CurrentUser.Username
+            };
+            builder
+                .AddField("Uptime", uptime, true)
+                .AddField("Guilds", guilds.ToString(), true)
+                .AddField("Users", users.ToString(), true);
+
+            await message.RespondWithEmbedAsync(builder);
+        }
+
+        [Command]
+        public static async Task Test(DiscordClient discord, DiscordMessage message)
+        {
+            await message.RespondAsync(message.Channel.Guild.Owner.JoinedAt.UtcDateTime.ToString());
         }
     }
 }
