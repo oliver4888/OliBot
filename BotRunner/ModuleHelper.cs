@@ -9,6 +9,9 @@ namespace BotRunner
 {
     public static class ModuleHelper
     {
+        public static IEnumerable<Assembly> ModuleAssemblies { get; private set; } = new List<Assembly>();
+        public static IEnumerable<Type> ModuleTypes { get; private set; } = new List<Type>();
+
         public static void LoadModules()
         {
             string moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
@@ -16,14 +19,17 @@ namespace BotRunner
             if (!Directory.Exists(moduleFolder))
                 Directory.CreateDirectory(moduleFolder);
 
-            Directory.EnumerateFiles(moduleFolder).Where(file => file.EndsWith("Module.dll")).ToList().ForEach(file => Assembly.LoadFile(file));
+            ModuleAssemblies = LoadAssemblies(Directory.EnumerateFiles(moduleFolder).Where(file => file.EndsWith("Module.dll")));
+
+            ModuleTypes = ModuleAssemblies.SelectMany(assembly => assembly.GetTypes())
+               .Where(type => type.Name.EndsWith("Module") && type.IsDefined(typeof(ModuleAttribute), false));
         }
 
-        public static IEnumerable<Type> GetModules()
+        static IEnumerable<Assembly> LoadAssemblies(IEnumerable<string> files)
         {
-            Type attribute = typeof(ModuleAttribute);
-            return AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetTypes())
-                .Where(type => type.Name.EndsWith("Module") && type.IsDefined(attribute, false));
+            foreach (string file in files)
+                yield return Assembly.LoadFile(file);
         }
+
     }
 }

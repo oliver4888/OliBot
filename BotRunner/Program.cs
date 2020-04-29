@@ -16,12 +16,11 @@ namespace BotRunner
             services.AddConfiguration();
 
             ModuleHelper.LoadModules();
-            IEnumerable<Type> modules = ModuleHelper.GetModules();
-            Type botCore = modules.Where(module => module.Name == "BotCoreModule").FirstOrDefault();
 
-            foreach (Type module in modules)
+            foreach (Type module in ModuleHelper.ModuleTypes)
                 services.AddSingleton(module);
 
+            Type botCore = ModuleHelper.ModuleTypes.Where(module => module.Name == "BotCoreModule").FirstOrDefault();
             (botCore.GetMethod("Start").Invoke(services.BuildServiceProvider().GetRequiredService(botCore), null) as Task).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
