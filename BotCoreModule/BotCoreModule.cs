@@ -2,16 +2,16 @@
 using DSharpPlus;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace BotCoreModule
 {
     [Module]
     public class BotCoreModule
     {
-        IConfigurationSection _config;
-        ILogger<BotCoreModule> _logger;
+        readonly IConfigurationSection _config;
+        readonly ILogger<BotCoreModule> _logger;
 
         public static DiscordClient discordClient;
 

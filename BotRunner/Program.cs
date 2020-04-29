@@ -1,16 +1,16 @@
 ﻿using System;
+using Serilog;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog;
 
 namespace BotRunner
 {
     static class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
