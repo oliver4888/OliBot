@@ -2,9 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace BotRunner
 {
@@ -12,8 +12,19 @@ namespace BotRunner
     {
         static void Main(string[] args)
         {
-            IServiceCollection services = new ServiceCollection();
-            services.AddConfiguration();
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false)
+                .Build();
+
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(configuration)
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
+            IServiceCollection services = new ServiceCollection()
+                .AddSingleton(configuration)
+                .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
 
             ModuleHelper.LoadModules();
 
@@ -23,11 +34,5 @@ namespace BotRunner
             Type botCore = ModuleHelper.ModuleTypes.Where(module => module.Name == "BotCoreModule").FirstOrDefault();
             (botCore.GetMethod("Start").Invoke(services.BuildServiceProvider().GetRequiredService(botCore), null) as Task).ConfigureAwait(false).GetAwaiter().GetResult();
         }
-
-        static IServiceCollection AddConfiguration(this IServiceCollection services) =>
-            services.AddSingleton(new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false)
-                .Build());
     }
 }
