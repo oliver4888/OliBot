@@ -37,7 +37,7 @@ namespace BotRunner
             Type botCore = ModuleHelper.ModuleTypes.Where(module => module.GetInterfaces().Contains(typeof(IBotCoreModule))).FirstOrDefault();
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
-            ILogger logger = serviceProvider.GetRequiredService<ILogger>();
+            ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
 
             if (botCore == null)
                 logger.LogError("Unable to find a bot core implementation!");
