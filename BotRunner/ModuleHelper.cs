@@ -1,8 +1,8 @@
-﻿using Common;
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Common.Attributes;
 using System.Collections.Generic;
 
 namespace BotRunner
