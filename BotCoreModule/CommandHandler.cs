@@ -49,14 +49,17 @@ namespace BotCoreModule
             object commandClassInstance = Activator.CreateInstance(commandClass);
 
             foreach (MethodInfo command in commands)
-                _commands.Add(command.Name.ToLowerInvariant(), new KeyValuePair<object, MethodInfo>(commandClassInstance, command));
+            {
+                CommandAttribute ca = command.GetCustomAttribute<CommandAttribute>();
+                _commands.Add(ca.CommandName == "" ? command.Name.ToLowerInvariant() : ca.CommandName, new KeyValuePair<object, MethodInfo>(commandClassInstance, command));
+            }
 
-            _logger.LogInformation($"Registered {_commands.Count()} commands for Type {commandClass.FullName}");
+            _logger.LogInformation($"Registered {_commands.Count()} command(s) for Type {commandClass.FullName}");
         }
 
         private void OnMessageCreated(MessageCreateEventArgs e)
         {
-            if (!e.Message.Content.StartsWith(_commandPrefix)) return;
+            if (e.Author.IsBot || !e.Message.Content.StartsWith(_commandPrefix)) return;
 
             string[] messageParts = e.Message.Content.Remove(0, _commandPrefix.Length).Split(" ");
 
