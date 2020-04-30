@@ -11,10 +11,12 @@ namespace BotCoreModule
     public class CoreCommands
     {
         [Command]
+        [Description("Ping pong?")]
         public async Task Ping(CommandContext ctx) =>
             await ctx.Message.Channel.SendMessageAsync("Pong!");
 
         [Command]
+        [Description("Returns some general stats on the bot.")]
         public async Task Stats(CommandContext ctx)
         {
             DiscordClient client = ctx.BotCoreModule.DiscordClient;
