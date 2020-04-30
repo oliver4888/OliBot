@@ -1,5 +1,6 @@
 ﻿using System;
 using DSharpPlus;
+using System.Linq;
 using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
@@ -15,21 +16,15 @@ namespace BotCoreModule
         readonly IConfigurationSection _config;
         readonly ILogger<BotCoreModule> _logger;
 
-        public static DiscordClient DiscordClient { get; private set; }
-        public static ICommandHandler CommandHandler { get; private set; }
-        public static DateTime StartTime { get; private set; }
+        public DiscordClient DiscordClient { get; private set; }
+        public ICommandHandler CommandHandler { get; private set; }
+        public DateTime StartTime { get; private set; }
 
         public BotCoreModule(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             _config = configuration.GetSection("BotCore");
             _logger = loggerFactory.CreateLogger<BotCoreModule>();
-            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this);
 
-            CommandHandler.RegisterCommands<CoreCommands>();
-        }
-
-        public async Task Start()
-        {
             DiscordClient = new DiscordClient(new DiscordConfiguration
             {
                 Token = _config["Token"],
@@ -42,6 +37,15 @@ namespace BotCoreModule
                 _logger.LogInformation($"Ready in {e.Client.Guilds.Count} Guilds!");
             };
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+
+            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this);
+
+            CommandHandler.RegisterCommands<CoreCommands>();
+        }
+
+        public async Task Start()
+        {
+            _logger.LogInformation($"Starting bot with {CommandHandler.CommandNames.Count()} commands: {string.Join(", ", CommandHandler.CommandNames)}");
 
             string status = _config["InitialStatus"];
 
