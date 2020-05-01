@@ -19,11 +19,14 @@ namespace BotCoreModule
         public DiscordClient DiscordClient { get; private set; }
         public ICommandHandler CommandHandler { get; private set; }
         public DateTime StartTime { get; private set; }
+        public ulong HostOwnerID { get; private set; }
 
         public BotCoreModule(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             _config = configuration.GetSection("BotCore");
             _logger = loggerFactory.CreateLogger<BotCoreModule>();
+
+            HostOwnerID = Convert.ToUInt64(_config["HostOwnerID"]);
 
             DiscordClient = new DiscordClient(new DiscordConfiguration
             {

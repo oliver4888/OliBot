@@ -6,9 +6,14 @@ namespace Common.Attributes
     public class CommandAttribute : Attribute
     {
         public readonly string CommandName;
-        public CommandAttribute(string commandName = "")
+        public readonly bool Hidden;
+        public readonly BotPermissionLevel PermissionLevel;
+
+        public CommandAttribute(string commandName = "", bool hidden = false, BotPermissionLevel permissionLevel = BotPermissionLevel.Everyone)
         {
             CommandName = commandName.ToLowerInvariant();
+            Hidden = hidden;
+            PermissionLevel = permissionLevel;
         }
     }
 }

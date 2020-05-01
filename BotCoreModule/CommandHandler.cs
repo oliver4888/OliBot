@@ -1,10 +1,12 @@
 ﻿using Common;
 using System;
+using DSharpPlus;
 using System.Linq;
 using System.Reflection;
 using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.EventArgs;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 
@@ -18,7 +20,7 @@ namespace BotCoreModule
         readonly ILogger<CommandHandler> _logger;
         readonly IBotCoreModule _botCoreModuleInstance;
 
-        readonly IDictionary<string, KeyValuePair<object, MethodInfo>> _commands = new Dictionary<string, KeyValuePair<object, MethodInfo>>();
+        readonly IDictionary<string, CommandListingValue> _commands = new Dictionary<string, CommandListingValue>();
 
         public IEnumerable<string> CommandNames { get { return _commands.Keys; } }
 
@@ -26,9 +28,7 @@ namespace BotCoreModule
         {
             _logger = logger;
             _botCoreModuleInstance = botCoreModuleInstance;
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-            _botCoreModuleInstance.DiscordClient.MessageCreated += async e => OnMessageCreated(e);
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+            _botCoreModuleInstance.DiscordClient.MessageCreated += OnMessageCreated;
         }
 
         public void RegisterCommands<T>() => RegisterCommands(typeof(T));
@@ -51,13 +51,13 @@ namespace BotCoreModule
             foreach (MethodInfo command in commands)
             {
                 CommandAttribute ca = command.GetCustomAttribute<CommandAttribute>();
-                _commands.Add(ca.CommandName == "" ? command.Name.ToLowerInvariant() : ca.CommandName, new KeyValuePair<object, MethodInfo>(commandClassInstance, command));
+                _commands.Add(ca.CommandName == "" ? command.Name.ToLowerInvariant() : ca.CommandName, new CommandListingValue(commandClass, commandClassInstance, command));
             }
 
             _logger.LogInformation($"Registered {_commands.Count()} command(s) for Type {commandClass.FullName}");
         }
 
-        private void OnMessageCreated(MessageCreateEventArgs e)
+        private async Task OnMessageCreated(MessageCreateEventArgs e)
         {
             if (e.Author.IsBot || !e.Message.Content.StartsWith(_commandPrefix)) return;
 
@@ -67,10 +67,27 @@ namespace BotCoreModule
 
             if (_commands.ContainsKey(command))
             {
-                KeyValuePair<object, MethodInfo> commandPair = _commands[command];
+                CommandListingValue commandListing = _commands[command];
+                switch(commandListing.PermissionLevel)
+                {
+                    case BotPermissionLevel.HostOwner:
+                        if (e.Author.Id != _botCoreModuleInstance.HostOwnerID)
+                        {
+                            await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
+                            return;
+                        }
+                        break;
+                    case BotPermissionLevel.Admin:
+                        if (!e.Channel.PermissionsFor(await e.Guild.GetMemberAsync(e.Author.Id)).HasFlag(Permissions.Administrator))
+                        {
+                            await e.Channel.SendMessageAsync($"{e.Author.Mention} This command can only be used by an administrator!");
+                            return;
+                        }
+                        break;
+                }
                 try
                 {
-                    commandPair.Value.Invoke(commandPair.Key, new object[] { new CommandContext { BotCoreModule = _botCoreModuleInstance, Message = e.Message } });
+                    await (commandListing.CommandMethod.Invoke(commandListing.TypeInstance, new object[] { new CommandContext { BotCoreModule = _botCoreModuleInstance, Message = e.Message } }) as Task);
                 }
                 catch (Exception ex)
                 {

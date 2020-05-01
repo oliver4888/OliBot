@@ -1,10 +1,10 @@
 ﻿using Common;
 using System;
+using DSharpPlus;
 using System.Text;
 using Common.Attributes;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
-using DSharpPlus;
 
 namespace BotCoreModule
 {
@@ -40,5 +40,15 @@ namespace BotCoreModule
 
             await ctx.Message.Channel.SendMessageAsync(embed: builder.Build());
         }
+
+        [Command(hidden: true, permissionLevel: BotPermissionLevel.HostOwner)]
+        [Description("Only the host owner should be able to use this command")]
+        public async Task TestHostOwner(CommandContext ctx) =>
+            await ctx.Message.Channel.SendMessageAsync("Test Command");
+
+        [Command(hidden: true, permissionLevel: BotPermissionLevel.Admin)]
+        [Description("Only server admins should be able to use this command")]
+        public async Task TestAdministrator(CommandContext ctx) =>
+            await ctx.Message.Channel.SendMessageAsync("Test Command");
     }
 }
