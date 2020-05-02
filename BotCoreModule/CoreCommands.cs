@@ -55,23 +55,23 @@ namespace BotCoreModule
 
             Permissions channelPermissions = ctx.Message.Channel.PermissionsFor(ctx.DiscordMember);
 
-            foreach (KeyValuePair<string, ICommand> kvp in ctx.BotCoreModule.CommandHandler.Commands)
+            foreach (ICommand command in ctx.BotCoreModule.CommandHandler.Commands)
             {
-                if (kvp.Value.Hidden ||
-                    (kvp.Value.PermissionLevel == BotPermissionLevel.HostOwner && ctx.DiscordMember.Id != ctx.BotCoreModule.HostOwnerID) ||
-                    (kvp.Value.PermissionLevel == BotPermissionLevel.Admin && !channelPermissions.HasFlag(Permissions.Administrator)))
+                if (command.Hidden ||
+                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.DiscordMember.Id != ctx.BotCoreModule.HostOwnerID) ||
+                    (command.PermissionLevel == BotPermissionLevel.Admin && !channelPermissions.HasFlag(Permissions.Administrator)))
                     continue;
 
                 StringBuilder descriptionBuilder = new StringBuilder()
-                    .AppendLine(kvp.Value.Description)
-                    .AppendLine($"**Usage:** ??{kvp.Key}");
+                    .AppendLine(command.Description)
+                    .AppendLine($"**Usage:** ??{command.Name}");
 
-                if (kvp.Value.PermissionLevel == BotPermissionLevel.HostOwner)
+                if (command.PermissionLevel == BotPermissionLevel.HostOwner)
                     descriptionBuilder.AppendLine("**Host Owner Only**");
-                else if (kvp.Value.PermissionLevel == BotPermissionLevel.Admin)
+                else if (command.PermissionLevel == BotPermissionLevel.Admin)
                     descriptionBuilder.AppendLine("**Admin Only**");
 
-                embedBuilder.AddField(kvp.Key, descriptionBuilder.ToString());
+                embedBuilder.AddField(command.Name, descriptionBuilder.ToString());
             }
 
             await ctx.Message.DeleteAsync();

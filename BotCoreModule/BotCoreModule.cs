@@ -48,7 +48,7 @@ namespace BotCoreModule
 
         public async Task Start()
         {
-            _logger.LogInformation($"Starting bot with {CommandHandler.Commands.Keys.Count()} commands: {string.Join(", ", CommandHandler.Commands.Keys)}");
+            _logger.LogInformation($"Starting bot with {CommandHandler.Commands.Count()} commands: {string.Join(", ", CommandHandler.Commands.Select(command => command.Name))}");
 
             string status = _config["InitialStatus"];
 

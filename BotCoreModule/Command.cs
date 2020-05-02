@@ -29,7 +29,7 @@ namespace BotCoreModule
 
             CommandAttribute commandAttribute = commandMethod.GetCustomAttribute<CommandAttribute>();
 
-            Name = commandAttribute.CommandName == "" ? commandMethod.Name : commandAttribute.CommandName;
+            Name = (commandAttribute.CommandName == "" ? commandMethod.Name : commandAttribute.CommandName).ToLowerInvariant();
             Hidden = commandAttribute.Hidden;
             PermissionLevel = commandAttribute.PermissionLevel;
 

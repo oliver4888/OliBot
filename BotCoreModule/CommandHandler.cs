@@ -21,8 +21,8 @@ namespace BotCoreModule
         readonly ILogger<CommandHandler> _logger;
         readonly IBotCoreModule _botCoreModuleInstance;
 
-        readonly IDictionary<string, ICommand> _commands = new Dictionary<string, ICommand>();
-        public IReadOnlyDictionary<string, ICommand> Commands => _commands as IReadOnlyDictionary<string, ICommand>;
+        readonly IList<ICommand> _commands = new List<ICommand>();
+        public IReadOnlyCollection<ICommand> Commands => _commands as IReadOnlyCollection<ICommand>;
 
         public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance)
         {
@@ -49,10 +49,7 @@ namespace BotCoreModule
             object commandClassInstance = Activator.CreateInstance(commandClass);
 
             foreach (MethodInfo command in commands)
-            {
-                Command c = new Command(commandClass, ref commandClassInstance, command);
-                _commands.Add(c.Name, c);
-            }
+                _commands.Add(new Command(commandClass, ref commandClassInstance, command));
 
             _logger.LogInformation($"Registered {_commands.Count()} command(s) for Type {commandClass.FullName}");
         }
@@ -63,13 +60,13 @@ namespace BotCoreModule
 
             string[] messageParts = e.Message.Content.Remove(0, _commandPrefix.Length).Split(" ");
 
-            string command = messageParts[0].ToLowerInvariant();
+            string commandName = messageParts[0].ToLowerInvariant();
 
-            if (_commands.ContainsKey(command))
-                await HandleCommand(e, command, messageParts);
+            if (_commands.Any(command => command.Name == commandName))
+                await HandleCommand(e, commandName, messageParts);
         }
 
-        private async Task HandleCommand(MessageCreateEventArgs e, string command, string[] messageParts)
+        private async Task HandleCommand(MessageCreateEventArgs e, string commandName, string[] messageParts)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
             Permissions channelPermissions = e.Channel.PermissionsFor(member);
@@ -80,8 +77,8 @@ namespace BotCoreModule
                 DiscordMember = member
             };
 
-            ICommand commandListing = _commands[command];
-            switch (commandListing.PermissionLevel)
+            ICommand command = _commands.FirstOrDefault(command => command.Name == commandName);
+            switch (command.PermissionLevel)
             {
                 case BotPermissionLevel.HostOwner:
                     if (e.Author.Id != _botCoreModuleInstance.HostOwnerID)
@@ -99,24 +96,24 @@ namespace BotCoreModule
                     break;
             }
 
-            if (commandListing.Permissions != Permissions.None && !(
+            if (command.Permissions != Permissions.None && !(
                 e.Guild.Owner.Id == e.Author.Id ||
                 channelPermissions.HasFlag(Permissions.Administrator) ||
-                channelPermissions.HasFlag(commandListing.Permissions)))
+                channelPermissions.HasFlag(command.Permissions)))
             {
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You do not have the required permissions to use this command!");
                 return;
             }
 
-            _logger.LogDebug($"Running command '{command}' for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
+            _logger.LogDebug($"Running command '{commandName}' for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
             try
             {
-                await (commandListing.MethodDelegate.DynamicInvoke(new object[] { commandContext }) as Task);
+                await (command.MethodDelegate.DynamicInvoke(new object[] { commandContext }) as Task);
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error running command {command}", ex);
+                _logger.LogError($"Error running command {commandName}", ex);
             }
         }
     }

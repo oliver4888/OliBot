@@ -5,7 +5,7 @@ namespace Common.Interfaces
 {
     public interface ICommandHandler
     {
-        public IReadOnlyDictionary<string, ICommand> Commands { get; }
+        public IReadOnlyCollection<ICommand> Commands { get; }
 
         public void RegisterCommands<T>();
         public void RegisterCommands(Type commandClass);
