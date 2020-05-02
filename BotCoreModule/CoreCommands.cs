@@ -3,7 +3,7 @@ using System;
 using DSharpPlus;
 using System.Text;
 using Common.Attributes;
-using System.Reflection;
+using Common.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -32,7 +32,7 @@ namespace BotCoreModule
             StringBuilder uptimeBuilder = new StringBuilder();
 
             if (uptime.Days > 0)
-                uptimeBuilder.Append(uptime.Days).Append(" Days ");
+                uptimeBuilder.Append(uptime.Days).Append($" Day{(uptime.Days == 1 ? "" : "s")} ");
 
             uptimeBuilder.Append(uptime.ToString(@"hh\:mm\:ss"));
 
@@ -43,7 +43,7 @@ namespace BotCoreModule
         }
 
         [Command]
-        [Description("Displays help information available to the user that run this command.")]
+        [Description("Displays help information for commands available to the user that run this command.")]
         public async Task Help(CommandContext ctx)
         {
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
@@ -55,16 +55,15 @@ namespace BotCoreModule
 
             Permissions channelPermissions = ctx.Message.Channel.PermissionsFor(ctx.DiscordMember);
 
-            foreach (KeyValuePair<string, CommandListingValue> kvp in ctx.BotCoreModule.CommandHandler.Commands)
+            foreach (KeyValuePair<string, ICommand> kvp in ctx.BotCoreModule.CommandHandler.Commands)
             {
                 if (kvp.Value.Hidden ||
                     (kvp.Value.PermissionLevel == BotPermissionLevel.HostOwner && ctx.DiscordMember.Id != ctx.BotCoreModule.HostOwnerID) ||
                     (kvp.Value.PermissionLevel == BotPermissionLevel.Admin && !channelPermissions.HasFlag(Permissions.Administrator)))
                     continue;
 
-                DescriptionAttribute descriptionAttribute = kvp.Value.CommandMethod.GetCustomAttribute<DescriptionAttribute>();
                 StringBuilder descriptionBuilder = new StringBuilder()
-                    .AppendLine(descriptionAttribute == null ? "No description provided." : descriptionAttribute.DescriptionText)
+                    .AppendLine(kvp.Value.Description)
                     .AppendLine($"**Usage:** ??{kvp.Key}");
 
                 if (kvp.Value.PermissionLevel == BotPermissionLevel.HostOwner)

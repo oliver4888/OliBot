@@ -5,11 +5,11 @@ using System.Linq;
 using System.Reflection;
 using Common.Attributes;
 using Common.Interfaces;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using DSharpPlus.Entities;
 
 namespace BotCoreModule
 {
@@ -21,8 +21,8 @@ namespace BotCoreModule
         readonly ILogger<CommandHandler> _logger;
         readonly IBotCoreModule _botCoreModuleInstance;
 
-        readonly IDictionary<string, CommandListingValue> _commands = new Dictionary<string, CommandListingValue>();
-        public IReadOnlyDictionary<string, CommandListingValue> Commands => _commands as IReadOnlyDictionary<string, CommandListingValue>;
+        readonly IDictionary<string, ICommand> _commands = new Dictionary<string, ICommand>();
+        public IReadOnlyDictionary<string, ICommand> Commands => _commands as IReadOnlyDictionary<string, ICommand>;
 
         public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance)
         {
@@ -50,10 +50,8 @@ namespace BotCoreModule
 
             foreach (MethodInfo command in commands)
             {
-                CommandAttribute ca = command.GetCustomAttribute<CommandAttribute>();
-                _commands.Add(
-                    ca.CommandName == "" ? command.Name.ToLowerInvariant() : ca.CommandName,
-                    new CommandListingValue(commandClass, commandClassInstance, command));
+                Command c = new Command(commandClass, ref commandClassInstance, command);
+                _commands.Add(c.Name, c);
             }
 
             _logger.LogInformation($"Registered {_commands.Count()} command(s) for Type {commandClass.FullName}");
@@ -82,7 +80,7 @@ namespace BotCoreModule
                 DiscordMember = member
             };
 
-            CommandListingValue commandListing = _commands[command];
+            ICommand commandListing = _commands[command];
             switch (commandListing.PermissionLevel)
             {
                 case BotPermissionLevel.HostOwner:
@@ -114,7 +112,7 @@ namespace BotCoreModule
 
             try
             {
-                await (commandListing.CommandMethod.Invoke(commandListing.TypeInstance, new object[] { commandContext }) as Task);
+                await (commandListing.MethodDelegate.DynamicInvoke(new object[] { commandContext }) as Task);
             }
             catch (Exception ex)
             {
