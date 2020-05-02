@@ -22,8 +22,7 @@ namespace BotCoreModule
         readonly IBotCoreModule _botCoreModuleInstance;
 
         readonly IDictionary<string, CommandListingValue> _commands = new Dictionary<string, CommandListingValue>();
-
-        public IEnumerable<string> CommandNames { get { return _commands.Keys; } }
+        public IReadOnlyDictionary<string, CommandListingValue> Commands => _commands as IReadOnlyDictionary<string, CommandListingValue>;
 
         public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance)
         {
@@ -110,6 +109,8 @@ namespace BotCoreModule
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You do not have the required permissions to use this command!");
                 return;
             }
+
+            _logger.LogDebug($"Running command '{command}' for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
             try
             {

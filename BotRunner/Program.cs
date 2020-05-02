@@ -43,7 +43,7 @@ namespace BotRunner
                 logger.LogError("Unable to find a bot core implementation!");
             else
             {
-                IBotCoreModule botCoreModule = services.BuildServiceProvider().GetRequiredService(botCore) as IBotCoreModule;
+                IBotCoreModule botCoreModule = serviceProvider.GetRequiredService(botCore) as IBotCoreModule;
                 try
                 {
                     (botCore.GetMethod("Start").Invoke(botCoreModule, null) as Task).ConfigureAwait(false).GetAwaiter().GetResult();

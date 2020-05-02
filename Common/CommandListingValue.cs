@@ -4,7 +4,7 @@ using DSharpPlus;
 using Common.Attributes;
 using System.Reflection;
 
-namespace BotCoreModule
+namespace Common
 {
     public class CommandListingValue
     {
