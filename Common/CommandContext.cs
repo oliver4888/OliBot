@@ -7,5 +7,6 @@ namespace Common
     {
         public IBotCoreModule BotCoreModule;
         public DiscordMessage Message;
+        public DiscordMember DiscordMember;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Common;
 using System;
+using DSharpPlus;
 using Common.Attributes;
 using System.Reflection;
 
@@ -13,6 +14,7 @@ namespace BotCoreModule
 
         public readonly bool Hidden;
         public readonly BotPermissionLevel PermissionLevel;
+        public readonly Permissions Permissions = Permissions.None;
 
         public CommandListingValue(Type type, object typeInstance, MethodInfo commandMethod)
         {
@@ -24,6 +26,9 @@ namespace BotCoreModule
 
             Hidden = commandAttribute.Hidden;
             PermissionLevel = commandAttribute.PermissionLevel;
+
+            if (commandMethod.IsDefined(typeof(RequiredPermissionsAttribute), false))
+                Permissions = commandMethod.GetCustomAttribute<RequiredPermissionsAttribute>().Permissions;
         }
     }
 }

@@ -9,6 +9,7 @@ using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using DSharpPlus.Entities;
 
 namespace BotCoreModule
 {
@@ -51,7 +52,9 @@ namespace BotCoreModule
             foreach (MethodInfo command in commands)
             {
                 CommandAttribute ca = command.GetCustomAttribute<CommandAttribute>();
-                _commands.Add(ca.CommandName == "" ? command.Name.ToLowerInvariant() : ca.CommandName, new CommandListingValue(commandClass, commandClassInstance, command));
+                _commands.Add(
+                    ca.CommandName == "" ? command.Name.ToLowerInvariant() : ca.CommandName,
+                    new CommandListingValue(commandClass, commandClassInstance, command));
             }
 
             _logger.LogInformation($"Registered {_commands.Count()} command(s) for Type {commandClass.FullName}");
@@ -66,33 +69,55 @@ namespace BotCoreModule
             string command = messageParts[0].ToLowerInvariant();
 
             if (_commands.ContainsKey(command))
+                await HandleCommand(e, command, messageParts);
+        }
+
+        private async Task HandleCommand(MessageCreateEventArgs e, string command, string[] messageParts)
+        {
+            DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
+            Permissions channelPermissions = e.Channel.PermissionsFor(member);
+            CommandContext commandContext = new CommandContext
             {
-                CommandListingValue commandListing = _commands[command];
-                switch(commandListing.PermissionLevel)
-                {
-                    case BotPermissionLevel.HostOwner:
-                        if (e.Author.Id != _botCoreModuleInstance.HostOwnerID)
-                        {
-                            await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
-                            return;
-                        }
-                        break;
-                    case BotPermissionLevel.Admin:
-                        if (!e.Channel.PermissionsFor(await e.Guild.GetMemberAsync(e.Author.Id)).HasFlag(Permissions.Administrator))
-                        {
-                            await e.Channel.SendMessageAsync($"{e.Author.Mention} This command can only be used by an administrator!");
-                            return;
-                        }
-                        break;
-                }
-                try
-                {
-                    await (commandListing.CommandMethod.Invoke(commandListing.TypeInstance, new object[] { new CommandContext { BotCoreModule = _botCoreModuleInstance, Message = e.Message } }) as Task);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"Error running command {command}", ex);
-                }
+                BotCoreModule = _botCoreModuleInstance,
+                Message = e.Message,
+                DiscordMember = member
+            };
+
+            CommandListingValue commandListing = _commands[command];
+            switch (commandListing.PermissionLevel)
+            {
+                case BotPermissionLevel.HostOwner:
+                    if (e.Author.Id != _botCoreModuleInstance.HostOwnerID)
+                    {
+                        await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
+                        return;
+                    }
+                    break;
+                case BotPermissionLevel.Admin:
+                    if (!channelPermissions.HasFlag(Permissions.Administrator))
+                    {
+                        await e.Channel.SendMessageAsync($"{e.Author.Mention} This command can only be used by an administrator!");
+                        return;
+                    }
+                    break;
+            }
+
+            if (commandListing.Permissions != Permissions.None && !(
+                e.Guild.Owner.Id == e.Author.Id ||
+                channelPermissions.HasFlag(Permissions.Administrator) ||
+                channelPermissions.HasFlag(commandListing.Permissions)))
+            {
+                await e.Channel.SendMessageAsync($"{e.Author.Mention} You do not have the required permissions to use this command!");
+                return;
+            }
+
+            try
+            {
+                await (commandListing.CommandMethod.Invoke(commandListing.TypeInstance, new object[] { commandContext }) as Task);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error running command {command}", ex);
             }
         }
     }

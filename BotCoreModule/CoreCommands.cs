@@ -50,5 +50,12 @@ namespace BotCoreModule
         [Description("Only server admins should be able to use this command")]
         public async Task TestAdministrator(CommandContext ctx) =>
             await ctx.Message.Channel.SendMessageAsync("Test Command");
+
+        [Command(hidden:true)]
+        [RequiredPermissions(Permissions.ManageRoles)]
+        public async Task TestPermissions(CommandContext ctx)
+        {
+            await ctx.Message.Channel.SendMessageAsync("Test Command");
+        }
     }
 }
