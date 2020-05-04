@@ -6,7 +6,6 @@ using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
-using System.Collections.Generic;
 
 namespace BotCoreModule
 {
@@ -21,8 +20,8 @@ namespace BotCoreModule
             DiscordEmbedBuilder builder = new DiscordEmbedBuilder()
                 .WithTitle($"{client.CurrentUser.Username} Stats")
                 .WithTimestamp(ctx.Message.Id)
-                .WithColor(ctx.DiscordMember.Color)
-                .WithFooter($"{ctx.DiscordMember.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.DiscordMember.AvatarUrl)
+                .WithColor(ctx.Member.Color)
+                .WithFooter($"{ctx.Member.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.Member.AvatarUrl)
                 .AddField("Server Count", client.Guilds.Count.ToString(), true)
                 .AddField("Shard Count", client.ShardCount.ToString(), true)
                 .AddField("WS Ping", $"{client.Ping}ms", true)
@@ -39,7 +38,7 @@ namespace BotCoreModule
             builder.AddField("Uptime", uptimeBuilder.ToString(), true);
 
             await ctx.Message.DeleteAsync();
-            await ctx.Message.Channel.SendMessageAsync(embed: builder.Build());
+            await ctx.Channel.SendMessageAsync(embed: builder.Build());
         }
 
         [Command]
@@ -48,18 +47,16 @@ namespace BotCoreModule
         {
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
                 .WithTitle($"{ctx.BotCoreModule.DiscordClient.CurrentUser.Username} Help")
-                .WithDescription($"Listing all commands available to {ctx.DiscordMember.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
+                .WithDescription($"Listing all commands available to {ctx.Member.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
                 .WithTimestamp(ctx.Message.Id)
-                .WithColor(ctx.DiscordMember.Color)
-                .WithFooter($"{ctx.DiscordMember.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.DiscordMember.AvatarUrl);
-
-            Permissions channelPermissions = ctx.Message.Channel.PermissionsFor(ctx.DiscordMember);
+                .WithColor(ctx.Member.Color)
+                .WithFooter($"{ctx.Member.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.Member.AvatarUrl);
 
             foreach (ICommand command in ctx.BotCoreModule.CommandHandler.Commands)
             {
                 if (command.Hidden ||
-                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.DiscordMember.Id != ctx.BotCoreModule.HostOwnerID) ||
-                    (command.PermissionLevel == BotPermissionLevel.Admin && !channelPermissions.HasFlag(Permissions.Administrator)))
+                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Member.Id != ctx.BotCoreModule.HostOwnerID) ||
+                    (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator)))
                     continue;
 
                 StringBuilder descriptionBuilder = new StringBuilder()
@@ -75,7 +72,7 @@ namespace BotCoreModule
             }
 
             await ctx.Message.DeleteAsync();
-            await ctx.Message.Channel.SendMessageAsync(embed: embedBuilder.Build());
+            await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
         }
     }
 }

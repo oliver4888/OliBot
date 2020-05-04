@@ -69,13 +69,7 @@ namespace BotCoreModule
         private async Task HandleCommand(MessageCreateEventArgs e, string commandName, string[] messageParts)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
-            Permissions channelPermissions = e.Channel.PermissionsFor(member);
-            CommandContext commandContext = new CommandContext
-            {
-                BotCoreModule = _botCoreModuleInstance,
-                Message = e.Message,
-                DiscordMember = member
-            };
+            CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member));
 
             ICommand command = _commands.FirstOrDefault(command => command.Name == commandName);
             switch (command.PermissionLevel)
@@ -88,7 +82,7 @@ namespace BotCoreModule
                     }
                     break;
                 case BotPermissionLevel.Admin:
-                    if (!channelPermissions.HasFlag(Permissions.Administrator))
+                    if (!ctx.ChannelPermissions.HasFlag(Permissions.Administrator))
                     {
                         await e.Channel.SendMessageAsync($"{e.Author.Mention} This command can only be used by an administrator!");
                         return;
@@ -98,8 +92,8 @@ namespace BotCoreModule
 
             if (command.Permissions != Permissions.None && !(
                 e.Guild.Owner.Id == e.Author.Id ||
-                channelPermissions.HasFlag(Permissions.Administrator) ||
-                channelPermissions.HasFlag(command.Permissions)))
+                ctx.ChannelPermissions.HasFlag(Permissions.Administrator) ||
+                ctx.ChannelPermissions.HasFlag(command.Permissions)))
             {
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You do not have the required permissions to use this command!");
                 return;
@@ -109,7 +103,7 @@ namespace BotCoreModule
 
             try
             {
-                await (command.MethodDelegate.DynamicInvoke(new object[] { commandContext }) as Task);
+                await (command.MethodDelegate.DynamicInvoke(new object[] { ctx }) as Task);
             }
             catch (Exception ex)
             {
