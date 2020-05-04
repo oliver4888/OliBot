@@ -39,6 +39,11 @@ namespace BotCoreModule
             {
                 _logger.LogInformation($"Ready in {e.Client.Guilds.Count} Guilds!");
             };
+
+            DiscordClient.ClientErrored += async e =>
+            {
+                _logger.LogError(e.Exception, $"Error in {e.EventName} event");
+            };
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
             CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this);
