@@ -2,8 +2,10 @@
 using Serilog;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Common.Interfaces;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,15 +36,31 @@ namespace BotRunner
             foreach (Type module in ModuleHelper.ModuleTypes)
                 services.AddSingleton(module);
 
-            Type botCore = ModuleHelper.ModuleTypes.Where(module => module.GetInterfaces().Contains(typeof(IBotCoreModule))).FirstOrDefault();
+            IEnumerable<Type> botCoreModules = ModuleHelper.ModuleTypes.Where(module => module.GetInterfaces().Contains(typeof(IBotCoreModule)));
 
             IServiceProvider serviceProvider = services.BuildServiceProvider();
             ILogger logger = serviceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Program");
 
-            if (botCore == null)
+            if (!botCoreModules.Any())
                 logger.LogError("Unable to find a bot core implementation!");
+            else if (botCoreModules.Count() != 1)
+            {
+                StringBuilder errorBuilder = new StringBuilder()
+                    .AppendLine($"More than one implementation of {nameof(IBotCoreModule)} was found!");
+
+                foreach (Type module in botCoreModules)
+                    errorBuilder.AppendLine($"{module.Name} in {module.Assembly.FullName}");
+
+                errorBuilder.AppendLine($"Please remove extra implementations of {nameof(IBotCoreModule)} before running the bot.");
+                logger.LogError(errorBuilder.ToString());
+            }
             else
             {
+                // Fetch each module from the DI container to load them
+                foreach (Type module in ModuleHelper.ModuleTypes.Where(module => !module.GetInterfaces().Contains(typeof(IBotCoreModule))))
+                    serviceProvider.GetRequiredService(module);
+
+                Type botCore = botCoreModules.First();
                 IBotCoreModule botCoreModule = serviceProvider.GetRequiredService(botCore) as IBotCoreModule;
                 try
                 {
