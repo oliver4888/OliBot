@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotRunner", "BotRunner\BotRunner.csproj", "{61D5B51B-A0C7-4046-B392-A241C78C0958}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotRunner", "BotRunner\BotRunner.csproj", "{61D5B51B-A0C7-4046-B392-A241C78C0958}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{E589419D-FC35-4B47-95DC-76F4DAE86821}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{E589419D-FC35-4B47-95DC-76F4DAE86821}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCoreModule", "BotCoreModule\BotCoreModule.csproj", "{1E90E35E-782F-4534-9A4F-E66D0ECBE323}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCoreModule", "BotCoreModule\BotCoreModule.csproj", "{1E90E35E-782F-4534-9A4F-E66D0ECBE323}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamHelperModule", "SteamHelperModule\SteamHelperModule.csproj", "{6B7A65BB-3ED4-45CF-A448-A129C28B746B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -34,7 +34,14 @@ namespace BotRunner
             ModuleHelper.LoadModules();
 
             foreach (Type module in ModuleHelper.ModuleTypes)
-                services.AddSingleton(module);
+            {
+                Type[] interfaces = module.GetInterfaces();
+                if (!interfaces.Any())
+                    services.AddSingleton(module);
+                else
+                    foreach (Type interfaceType in interfaces)
+                        services.AddSingleton(interfaceType, module);
+            }
 
             IEnumerable<Type> botCoreModules = ModuleHelper.ModuleTypes.Where(module => module.GetInterfaces().Contains(typeof(IBotCoreModule)));
 
@@ -56,14 +63,15 @@ namespace BotRunner
             }
             else
             {
-                // Fetch each module from the DI container to load them
-                foreach (Type module in ModuleHelper.ModuleTypes.Where(module => !module.GetInterfaces().Contains(typeof(IBotCoreModule))))
-                    serviceProvider.GetRequiredService(module);
-
-                Type botCore = botCoreModules.First();
-                IBotCoreModule botCoreModule = serviceProvider.GetRequiredService(botCore) as IBotCoreModule;
                 try
                 {
+                    // Fetch each module from the DI container to load them
+                    foreach (Type module in ModuleHelper.ModuleTypes.Where(module => !module.GetInterfaces().Contains(typeof(IBotCoreModule))))
+                        serviceProvider.GetRequiredService(module);
+
+                    Type botCore = botCoreModules.First();
+                    IBotCoreModule botCoreModule = serviceProvider.GetRequiredService<IBotCoreModule>();
+
                     (botCore.GetMethod("Start").Invoke(botCoreModule, null) as Task).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
