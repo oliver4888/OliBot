@@ -6,6 +6,7 @@ using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using DSharpPlus.Exceptions;
 using System.Threading.Tasks;
 using SteamWebAPI2.Utilities;
 using SteamWebAPI2.Interfaces;
@@ -67,9 +68,13 @@ namespace SteamHelperModule
                 {
                     await e.Message.DeleteAsync();
                 }
+                catch (NotFoundException)
+                {
+                    _logger.LogDebug($"Attempted to remove deleted message {e.Message.Id}");
+                }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error deleting message: {e.Message.Id}");
+                    _logger.LogError(ex, $"Error deleting message {e.Message.Id}");
                 }
             }
 
@@ -94,12 +99,12 @@ namespace SteamHelperModule
                 .AddField("Author", userModel.Nickname, true)
                 .AddField("Created", model.TimeCreated.ToString(), true)
                 .AddField("Last Updated", model.TimeUpdated.ToString(), true)
-                .AddField("Views", model.Views.ToString(), true)
-                .AddField("Favorited", model.Favorited.ToString(), true)
-                .AddField("Subscriptions", model.Subscriptions.ToString(), true)
+                .AddField("Views", string.Format("{0:n0}", model.Views), true)
+                .AddField("Favorited", string.Format("{0:n0}", model.Favorited), true)
+                .AddField("Subscriptions", string.Format("{0:n0}", model.Subscriptions), true)
                 .AddField("Tags", string.Join(", ", model.Tags))
                 .AddField("Steam Client Link", SteamClientLinkAffix + model.PublishedFileId.ToString())
-                .WithThumbnailUrl(model.PreviewUrl)
+                .WithImageUrl(model.PreviewUrl)
                 .Build();
         }
     }
