@@ -9,6 +9,10 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="SteamWebAPI2" Version="4.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\BotCoreModule\BotCoreModule.csproj" />
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
