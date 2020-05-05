@@ -10,7 +10,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace BotCoreModule
 {
-    [Module]
+    [Module(typeof(IBotCoreModule))]
     public class BotCoreModule : IBotCoreModule
     {
         readonly IConfigurationSection _config;

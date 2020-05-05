@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
+using System.Reflection;
+using Common.Attributes;
 
 namespace BotRunner
 {
@@ -35,12 +37,11 @@ namespace BotRunner
 
             foreach (Type module in ModuleHelper.ModuleTypes)
             {
-                Type[] interfaces = module.GetInterfaces();
-                if (!interfaces.Any())
+                Type implements = module.GetCustomAttribute<ModuleAttribute>().Implements;
+                if (implements == null)
                     services.AddSingleton(module);
                 else
-                    foreach (Type interfaceType in interfaces)
-                        services.AddSingleton(interfaceType, module);
+                    services.AddSingleton(implements, module);
             }
 
             IEnumerable<Type> botCoreModules = ModuleHelper.ModuleTypes.Where(module => module.GetInterfaces().Contains(typeof(IBotCoreModule)));
