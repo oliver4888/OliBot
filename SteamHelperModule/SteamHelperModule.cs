@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Linq;
 using Steam.Models;
-using System.Net.Http;
 using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
 using System.Threading.Tasks;
-using SteamWebAPI2.Utilities;
-using SteamWebAPI2.Interfaces;
 using Steam.Models.SteamCommunity;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
@@ -30,21 +27,17 @@ namespace SteamHelperModule
         const string _regexString = @"(http(s)?:\/\/)?steam(community\.com\/sharedfiles\/filedetails\/\?id=|:\/\/url\/CommunityFilePage\/)(\d{9,10})";
         readonly Regex _steamRegex = new Regex(_regexString, RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        readonly SteamWebInterfaceFactory SteamWebInterfaceFactory;
-        readonly SteamRemoteStorage SteamRemoteStorage;
-        readonly SteamUser SteamUser;
+        readonly SteamWebApiHelper SteamWebApiHelper;
 
-        public SteamHelperModule(ILogger<SteamHelperModule> logger, IConfiguration configuration, IBotCoreModule botCoreModule)
+        public SteamHelperModule(ILoggerFactory loggerFactory, IConfiguration configuration, IBotCoreModule botCoreModule)
         {
-            _logger = logger;
+            _logger = loggerFactory.CreateLogger<SteamHelperModule>();
             _config = configuration.GetSection("SteamHelper");
             _botCoreModule = botCoreModule;
 
             _botCoreModule.DiscordClient.MessageCreated += OnMessageCreated;
 
-            SteamWebInterfaceFactory = new SteamWebInterfaceFactory(_config["Token"]);
-            SteamRemoteStorage = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamRemoteStorage>(new HttpClient());
-            SteamUser = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamUser>(new HttpClient());
+            SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"]);
         }
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)
@@ -59,8 +52,8 @@ namespace SteamHelperModule
 
             _logger.LogDebug($"Generating Steam embed wsID:{itemId} for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
-            PublishedFileDetailsModel response = (await SteamRemoteStorage.GetPublishedFileDetailsAsync(itemId)).Data;
-            PlayerSummaryModel userResponse = (await SteamUser.GetPlayerSummaryAsync(response.Creator)).Data;
+            PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(itemId);
+            PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
 
             if (matches.Count() == 1 && e.Message.Content.Trim() == matches[0].Value)
             {
