@@ -3,6 +3,7 @@ using System;
 using DSharpPlus;
 using System.Text;
 using Common.Attributes;
+using Common.Extensions;
 using Common.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
@@ -19,9 +20,7 @@ namespace BotCoreModule
 
             DiscordEmbedBuilder builder = new DiscordEmbedBuilder()
                 .WithTitle($"{client.CurrentUser.Username} Stats")
-                .WithTimestamp(ctx.Message.Id)
-                .WithColor(ctx.Member.Color)
-                .WithFooter($"{ctx.Member.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.Member.AvatarUrl)
+                .WithCustomFooterWithColour(ctx.Message, ctx.Member)
                 .AddField("Server Count", client.Guilds.Count.ToString(), true)
                 .AddField("Shard Count", client.ShardCount.ToString(), true)
                 .AddField("WS Ping", $"{client.Ping}ms", true)
@@ -37,8 +36,8 @@ namespace BotCoreModule
 
             builder.AddField("Uptime", uptimeBuilder.ToString(), true);
 
-            await ctx.Message.DeleteAsync();
             await ctx.Channel.SendMessageAsync(embed: builder.Build());
+            await ctx.Message.DeleteAsync();
         }
 
         [Command]
@@ -48,9 +47,7 @@ namespace BotCoreModule
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
                 .WithTitle($"{ctx.BotCoreModule.DiscordClient.CurrentUser.Username} Help")
                 .WithDescription($"Listing all commands available to {ctx.Member.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
-                .WithTimestamp(ctx.Message.Id)
-                .WithColor(ctx.Member.Color)
-                .WithFooter($"{ctx.Member.Username} used {ctx.Message.Content.Split(' ')[0]}", ctx.Member.AvatarUrl);
+                .WithCustomFooterWithColour(ctx.Message, ctx.Member);
 
             foreach (ICommand command in ctx.BotCoreModule.CommandHandler.Commands)
             {
@@ -71,8 +68,8 @@ namespace BotCoreModule
                 embedBuilder.AddField(command.Name, descriptionBuilder.ToString());
             }
 
-            await ctx.Message.DeleteAsync();
             await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
+            await ctx.Message.DeleteAsync();
         }
     }
 }
