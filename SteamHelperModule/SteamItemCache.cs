@@ -7,10 +7,11 @@ namespace SteamHelperModule
 {
     public class SteamItemCache
     {
-        ILogger<SteamItemCache> _logger;
+        readonly ILogger<SteamItemCache> _logger;
         readonly MemoryCache _cache;
+        readonly object _lockObject = new object();
 
-        object _lockObject = new object();
+        public long CacheItemCount => _cache.GetCount();
 
         public SteamItemCache(ILogger<SteamItemCache> logger, string cacheName)
         {

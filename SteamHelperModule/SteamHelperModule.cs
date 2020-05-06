@@ -35,6 +35,7 @@ namespace SteamHelperModule
             _config = configuration.GetSection("SteamHelper");
             _botCoreModule = botCoreModule;
 
+            _botCoreModule.CommandHandler.RegisterCommands<SteamCommands>();
             _botCoreModule.DiscordClient.MessageCreated += OnMessageCreated;
 
             SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"]);
@@ -85,6 +86,9 @@ namespace SteamHelperModule
         {
             string description = Regex.Replace(model.Description, @"\[[^]]+\]", "");
 
+            if (model.PreviewUrl != null)
+                builder.WithImageUrl(model.PreviewUrl);
+
             return builder
                 .WithTitle(model.Title)
                 .WithUrl(SteamWebLinkAffix + model.PublishedFileId.ToString())
@@ -97,7 +101,6 @@ namespace SteamHelperModule
                 .AddField("Subscriptions", string.Format("{0:n0}", model.Subscriptions), true)
                 .AddField("Tags", string.Join(", ", model.Tags))
                 .AddField("Steam Client Link", SteamClientLinkAffix + model.PublishedFileId.ToString())
-                .WithImageUrl(model.PreviewUrl)
                 .Build();
         }
     }

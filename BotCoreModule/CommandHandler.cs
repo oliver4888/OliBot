@@ -51,7 +51,7 @@ namespace BotCoreModule
             foreach (MethodInfo command in commands)
                 _commands.Add(new Command(commandClass, ref commandClassInstance, command));
 
-            _logger.LogInformation($"Registered {_commands.Count()} command(s) for Type {commandClass.FullName}");
+            _logger.LogInformation($"Registered {commands.Count()} command(s) for Type {commandClass.FullName}");
         }
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)
