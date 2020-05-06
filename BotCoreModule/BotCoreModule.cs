@@ -46,7 +46,7 @@ namespace BotCoreModule
             };
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
-            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this);
+            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this, _config["CommandPrefix"]);
 
             CommandHandler.RegisterCommands<CoreCommands>();
         }

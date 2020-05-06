@@ -16,7 +16,7 @@ namespace BotCoreModule
     public class CommandHandler : ICommandHandler
     {
         // This will be moved to a db and configurable per server 
-        const string _commandPrefix = "??";
+        readonly string _commandPrefix;
 
         readonly ILogger<CommandHandler> _logger;
         readonly IBotCoreModule _botCoreModuleInstance;
@@ -24,11 +24,12 @@ namespace BotCoreModule
         readonly IList<ICommand> _commands = new List<ICommand>();
         public IReadOnlyCollection<ICommand> Commands => _commands as IReadOnlyCollection<ICommand>;
 
-        public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance)
+        public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance, string commandPrefix)
         {
             _logger = logger;
             _botCoreModuleInstance = botCoreModuleInstance;
             _botCoreModuleInstance.DiscordClient.MessageCreated += OnMessageCreated;
+            _commandPrefix = commandPrefix;
         }
 
         public void RegisterCommands<T>() => RegisterCommands(typeof(T));
