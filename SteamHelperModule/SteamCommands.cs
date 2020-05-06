@@ -10,6 +10,7 @@ namespace SteamHelperModule
     public class SteamCommands
     {
         [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Alias("SteamStats")]
         [Description("Gets stats on the MemoryCache objects used to store Steam data")]
         public async Task CacheStats(CommandContext ctx)
         {

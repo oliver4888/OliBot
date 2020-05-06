@@ -56,6 +56,8 @@ namespace SteamHelperModule
             PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(itemId);
             PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
 
+            await e.Channel.SendMessageAsync(embed: BuildEmbedForItem(await CreateEmptyEmbedForEvent(e), response, userResponse));
+
             if (matches.Count() == 1 && e.Message.Content.Trim() == matches[0].Value)
             {
                 try
@@ -71,8 +73,6 @@ namespace SteamHelperModule
                     _logger.LogError(ex, $"Error deleting message {e.Message.Id}");
                 }
             }
-
-            await e.Channel.SendMessageAsync(embed: BuildEmbedForItem(await CreateEmptyEmbedForEvent(e), response, userResponse));
         }
 
         public async Task<DiscordEmbedBuilder> CreateEmptyEmbedForEvent(MessageCreateEventArgs e)

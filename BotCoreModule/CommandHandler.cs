@@ -63,7 +63,7 @@ namespace BotCoreModule
 
             string commandName = messageParts[0].ToLowerInvariant();
 
-            if (_commands.Any(command => command.Name == commandName))
+            if (_commands.Any(command => command.Triggers.Contains(commandName)))
                 await HandleCommand(e, commandName, messageParts);
         }
 

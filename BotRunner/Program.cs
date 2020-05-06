@@ -3,15 +3,15 @@ using Serilog;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Common.Attributes;
 using Common.Interfaces;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-using System.Reflection;
-using Common.Attributes;
 
 namespace BotRunner
 {

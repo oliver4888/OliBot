@@ -2,6 +2,7 @@
 using System;
 using DSharpPlus;
 using System.Text;
+using System.Linq;
 using Common.Attributes;
 using Common.Extensions;
 using Common.Interfaces;
@@ -59,6 +60,9 @@ namespace BotCoreModule
                 StringBuilder descriptionBuilder = new StringBuilder()
                     .AppendLine(command.Description)
                     .AppendLine($"**Usage:** ??{command.Name}");
+
+                if (command.Triggers.Count > 1)
+                    descriptionBuilder.AppendLine($"**Aliases:** `{string.Join("`, `", command.Triggers.Skip(1))}`");
 
                 if (command.PermissionLevel == BotPermissionLevel.HostOwner)
                     descriptionBuilder.AppendLine("**Host Owner Only**");
