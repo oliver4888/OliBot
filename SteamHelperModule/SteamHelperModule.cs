@@ -87,19 +87,19 @@ namespace SteamHelperModule
             string description = string.Join(" ", Regex.Replace(model.Description, @"\[[^]]+\]", "").Split(Environment.NewLine));
 
             if (model.PreviewUrl != null)
-                builder.WithImageUrl(model.PreviewUrl);
+                builder.WithThumbnailUrl(model.PreviewUrl);
 
             return builder
-                .WithTitle(model.Title)
+                .WithTitle($"{model.Title} by {userModel.Nickname}")
                 .WithUrl(SteamWebLinkAffix + model.PublishedFileId.ToString())
                 .WithDescription(description.Length > 200 ? description.Substring(0, 200).Trim() + "..." : description)
-                .AddField("Author", userModel.Nickname, true)
+                //.AddField("Author", userModel.Nickname, true)
                 //.AddField("Created", model.TimeCreated.ToString(), true)
                 .AddField("Last Updated", model.TimeUpdated.ToString(), true)
                 .AddField("Views", string.Format("{0:n0}", model.Views), true)
                 //.AddField("Favorited", string.Format("{0:n0}", model.Favorited), true)
                 //.AddField("Subscriptions", string.Format("{0:n0}", model.Subscriptions), true)
-                .AddField("Tags", string.Join(", ", model.Tags))
+                .AddField("Tags", string.Join(", ", model.Tags), true)
                 .AddField("Steam Client Link", SteamClientLinkAffix + model.PublishedFileId.ToString())
                 .Build();
         }
