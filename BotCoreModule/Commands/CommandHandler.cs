@@ -10,8 +10,9 @@ using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using BotCoreModule.Commands.Extensions;
 
-namespace BotCoreModule
+namespace BotCoreModule.Commands
 {
     public class CommandHandler : ICommandHandler
     {
@@ -63,16 +64,15 @@ namespace BotCoreModule
 
             string commandName = messageParts[0].ToLowerInvariant();
 
-            if (_commands.Any(command => command.Triggers.Contains(commandName)))
-                await HandleCommand(e, commandName, messageParts);
+            if (_commands.TryGetCommand(commandName, out ICommand command))
+                await HandleCommand(e, command, commandName, messageParts);
         }
 
-        private async Task HandleCommand(MessageCreateEventArgs e, string commandName, string[] messageParts)
+        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, string[] messageParts)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
             CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member));
 
-            ICommand command = _commands.FirstOrDefault(command => command.Name == commandName);
             switch (command.PermissionLevel)
             {
                 case BotPermissionLevel.HostOwner:
@@ -100,7 +100,7 @@ namespace BotCoreModule
                 return;
             }
 
-            _logger.LogDebug($"Running command '{commandName}' for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
+            _logger.LogDebug($"Running command {(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")} for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
             try
             {
@@ -108,7 +108,7 @@ namespace BotCoreModule
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error running command {commandName}", ex);
+                _logger.LogError($"Error running command `{command.Name}`", ex);
             }
         }
     }

@@ -8,6 +8,6 @@ namespace Common.Extensions
             builder
                 .WithTimestamp(message.Id)
                 .WithColor(member.Color)
-                .WithFooter($"{member.Username} used {message.Content.Split(' ')[0]}", member.AvatarUrl);
+                .WithFooter($"{member.Username} used {message.Content.Split(' ')[0].ToLowerInvariant()}", member.AvatarUrl);
     }
 }

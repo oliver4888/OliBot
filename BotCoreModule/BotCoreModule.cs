@@ -4,6 +4,7 @@ using System.Linq;
 using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
+using BotCoreModule.Commands;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;

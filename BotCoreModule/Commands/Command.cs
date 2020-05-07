@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using System.Collections.Generic;
 
-namespace BotCoreModule
+namespace BotCoreModule.Commands
 {
     public class Command : ICommand
     {
