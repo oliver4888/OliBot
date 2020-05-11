@@ -9,14 +9,17 @@ namespace SteamHelperModule
     {
         readonly ILogger<SteamItemCache> _logger;
         readonly MemoryCache _cache;
+        readonly int _absExpirationHourOffset;
+
         readonly object _lockObject = new object();
 
         public long CacheItemCount => _cache.GetCount();
 
-        public SteamItemCache(ILogger<SteamItemCache> logger, string cacheName)
+        public SteamItemCache(ILogger<SteamItemCache> logger, string cacheName, int absExpirationHourOffset)
         {
             _logger = logger;
             _cache = new MemoryCache(cacheName);
+            _absExpirationHourOffset = absExpirationHourOffset;
         }
 
         public Task<T> AddOrGetExisting<T>(string key, Func<Task<T>> valueFactory)
@@ -24,7 +27,7 @@ namespace SteamHelperModule
             lock (_lockObject)
             {
                 var newValue = new Lazy<Task<T>>(valueFactory);
-                var oldValue = _cache.AddOrGetExisting(key, newValue, new CacheItemPolicy() { AbsoluteExpiration = DateTime.Now.AddHours(6) }) as Lazy<Task<T>>;
+                var oldValue = _cache.AddOrGetExisting(key, newValue, new CacheItemPolicy() { AbsoluteExpiration = DateTime.Now.AddHours(_absExpirationHourOffset) }) as Lazy<Task<T>>;
                 try
                 {
                     return (oldValue ?? newValue).Value;

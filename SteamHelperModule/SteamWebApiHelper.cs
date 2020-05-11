@@ -24,17 +24,17 @@ namespace SteamHelperModule
         static readonly IDictionary<string, SteamItemCache> _caches = new Dictionary<string, SteamItemCache>();
         public static IReadOnlyDictionary<string, SteamItemCache> Caches => _caches as IReadOnlyDictionary<string, SteamItemCache>;
 
-        public SteamWebApiHelper(ILoggerFactory loggerFactory, string token)
+        public SteamWebApiHelper(ILoggerFactory loggerFactory, string token, int absExpirationHourOffset)
         {
             _logger = loggerFactory.CreateLogger<SteamWebApiHelper>();
             _client = new HttpClient();
 
             // Caches of the same endpoint should be shared between instances
             if (!_caches.ContainsKey(PublishedFileCacheKey))
-                _caches.Add(PublishedFileCacheKey, new SteamItemCache(loggerFactory.CreateLogger<SteamItemCache>(), PublishedFileCacheKey));
+                _caches.Add(PublishedFileCacheKey, new SteamItemCache(loggerFactory.CreateLogger<SteamItemCache>(), PublishedFileCacheKey, absExpirationHourOffset));
 
             if (!_caches.ContainsKey(PlayerSummaryCacheKey))
-                _caches.Add(PlayerSummaryCacheKey, new SteamItemCache(loggerFactory.CreateLogger<SteamItemCache>(), PlayerSummaryCacheKey));
+                _caches.Add(PlayerSummaryCacheKey, new SteamItemCache(loggerFactory.CreateLogger<SteamItemCache>(), PlayerSummaryCacheKey, absExpirationHourOffset));
 
             SteamWebInterfaceFactory = new SteamWebInterfaceFactory(token);
             SteamRemoteStorage = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamRemoteStorage>(_client);
