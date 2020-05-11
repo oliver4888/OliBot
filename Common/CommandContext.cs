@@ -24,6 +24,8 @@ namespace Common
         public IReadOnlyList<DiscordRole> MentionedRoles => _event.MentionedRoles;
         public IReadOnlyList<DiscordChannel> MentionedChannels => _event.MentionedChannels;
 
+        public bool IsDMs => Channel.IsPrivate;
+
         public CommandContext(MessageCreateEventArgs messageCreateEventArgs, IBotCoreModule botCoreModule, DiscordMember discordMember, Permissions channelPermissions)
         {
             _event = messageCreateEventArgs;

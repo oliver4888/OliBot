@@ -18,7 +18,7 @@ namespace BotCoreModule.Commands
     public class CommandHandler : ICommandHandler
     {
         // This will be moved to a db and configurable per server 
-        readonly string _commandPrefix;
+        public string CommandPrefix { get; private set; }
 
         readonly ILogger<CommandHandler> _logger;
         readonly IBotCoreModule _botCoreModuleInstance;
@@ -31,7 +31,7 @@ namespace BotCoreModule.Commands
             _logger = logger;
             _botCoreModuleInstance = botCoreModuleInstance;
             _botCoreModuleInstance.DiscordClient.MessageCreated += OnMessageCreated;
-            _commandPrefix = commandPrefix;
+            CommandPrefix = commandPrefix;
         }
 
         public void RegisterCommands<T>() => RegisterCommands(typeof(T));
@@ -59,17 +59,32 @@ namespace BotCoreModule.Commands
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)
         {
-            if (e.Author.IsBot || !e.Message.Content.StartsWith(_commandPrefix)) return;
+            if (e.Author.IsBot || !e.Message.Content.StartsWith(CommandPrefix)) return;
 
-            string[] messageParts = e.Message.Content.Remove(0, _commandPrefix.Length).Split(" ");
-
-            string commandName = messageParts[0].ToLowerInvariant();
+            string commandName = e.Message.Content.Remove(0, CommandPrefix.Length).Split(" ")[0].ToLowerInvariant();
 
             if (_commands.TryGetCommand(commandName, out ICommand command))
-                await HandleCommand(e, command, commandName, messageParts);
+                if (e.Channel.IsPrivate)
+                    await HandleCommandDMs(e, command, commandName);
+                else
+                    await HandleCommand(e, command, commandName);
         }
 
-        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, string[] messageParts)
+        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed)
+        {
+            if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
+            {
+                await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
+                return;
+            }
+
+            _logger.LogDebug($"Running command " +
+                $"{(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")} for {e.Author.Username}({e.Author.Id}) in DMs");
+
+            await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None));
+        }
+
+        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
             CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member));
@@ -104,6 +119,11 @@ namespace BotCoreModule.Commands
             _logger.LogDebug($"Running command {(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")}" +
                 $" for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
+            await InvokeCommand(command, ctx);
+        }
+
+        private async Task InvokeCommand(ICommand command, CommandContext ctx)
+        {
             try
             {
                 await (command.MethodDelegate.DynamicInvoke(new object[] { ctx }) as Task);

@@ -21,11 +21,13 @@ namespace BotCoreModule
 
             DiscordEmbedBuilder builder = new DiscordEmbedBuilder()
                 .WithTitle($"{client.CurrentUser.Username} Stats")
-                .WithCustomFooterWithColour(ctx.Message, ctx.Member)
                 .AddField("Server Count", client.Guilds.Count.ToString(), true)
                 .AddField("Shard Count", client.ShardCount.ToString(), true)
                 .AddField("WS Ping", $"{client.Ping}ms", true)
                 .AddField("DSharp+ Version", client.VersionString, true);
+
+            if (!ctx.IsDMs)
+                builder.WithCustomFooterWithColour(ctx.Message, ctx.Member);
 
             TimeSpan uptime = DateTime.Now - ctx.BotCoreModule.StartTime;
             StringBuilder uptimeBuilder = new StringBuilder();
@@ -38,7 +40,9 @@ namespace BotCoreModule
             builder.AddField("Uptime", uptimeBuilder.ToString(), true);
 
             await ctx.Channel.SendMessageAsync(embed: builder.Build());
-            await ctx.Message.DeleteAsync();
+
+            if (!ctx.IsDMs)
+                await ctx.Message.DeleteAsync();
         }
 
         [Command]
@@ -46,20 +50,25 @@ namespace BotCoreModule
         public async Task Help(CommandContext ctx)
         {
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
-                .WithTitle($"{ctx.BotCoreModule.DiscordClient.CurrentUser.Username} Help")
-                .WithDescription($"Listing all commands available to {ctx.Member.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
-                .WithCustomFooterWithColour(ctx.Message, ctx.Member);
+                .WithTitle($"{ctx.BotCoreModule.DiscordClient.CurrentUser.Username} Help");
+
+            if (ctx.IsDMs)
+                embedBuilder.WithDescription("Listing all available commands.");
+            else
+                embedBuilder
+                    .WithDescription($"Listing all commands available to {ctx.Member.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
+                    .WithCustomFooterWithColour(ctx.Message, ctx.Member);
 
             foreach (ICommand command in ctx.BotCoreModule.CommandHandler.Commands)
             {
                 if (command.Hidden ||
-                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Member.Id != ctx.BotCoreModule.HostOwnerID) ||
+                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Author.Id != ctx.BotCoreModule.HostOwnerID) ||
                     (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator)))
                     continue;
 
                 StringBuilder descriptionBuilder = new StringBuilder()
                     .AppendLine(command.Description)
-                    .AppendLine($"**Usage:** ??{command.Name}");
+                    .AppendLine($"**Usage:** {ctx.BotCoreModule.CommandHandler.CommandPrefix}{command.Name}");
 
                 if (command.Triggers.Count > 1)
                     descriptionBuilder.AppendLine($"**Aliases:** `{string.Join("`, `", command.Triggers.Skip(1))}`");
@@ -73,7 +82,9 @@ namespace BotCoreModule
             }
 
             await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
-            await ctx.Message.DeleteAsync();
+
+            if (!ctx.IsDMs)
+                await ctx.Message.DeleteAsync();
         }
 
         //[Command(hidden: true, permissionLevel: BotPermissionLevel.HostOwner)]

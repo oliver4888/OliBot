@@ -51,14 +51,15 @@ namespace SteamHelperModule
 
             ulong itemId = ulong.Parse(matches[0].Groups.Last().Value);
 
-            _logger.LogDebug($"Generating Steam embed wsID:{itemId} for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
+            _logger.LogDebug($"Generating Steam embed wsID:{itemId} for {e.Author.Username}({e.Author.Id}) in " +
+                $"{(e.Channel.IsPrivate ? "DMs" : $"channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}")}");
 
             PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(itemId);
             PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
 
             await e.Channel.SendMessageAsync(embed: BuildEmbedForItem(await CreateEmptyEmbedForEvent(e), response, userResponse));
 
-            if (matches.Count() == 1 && e.Message.Content.Trim() == matches[0].Value)
+            if (!e.Channel.IsPrivate && matches.Count() == 1 && e.Message.Content.Trim() == matches[0].Value)
             {
                 try
                 {
@@ -77,9 +78,16 @@ namespace SteamHelperModule
 
         public async Task<DiscordEmbedBuilder> CreateEmptyEmbedForEvent(MessageCreateEventArgs e)
         {
-            DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
+            if (e.Channel.IsPrivate)
+            {
+                return new DiscordEmbedBuilder();
+            }
+            else
+            {
+                DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
 
-            return new DiscordEmbedBuilder().WithTimestamp(e.Message.Id).WithColor(member.Color).WithFooter($"{member.Username}", member.AvatarUrl);
+                return new DiscordEmbedBuilder().WithTimestamp(e.Message.Id).WithColor(member.Color).WithFooter($"{member.Username}", member.AvatarUrl);
+            }
         }
 
         private DiscordEmbed BuildEmbedForItem(DiscordEmbedBuilder builder, PublishedFileDetailsModel model, PlayerSummaryModel userModel)
