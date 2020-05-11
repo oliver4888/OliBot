@@ -7,7 +7,7 @@ namespace Common.Interfaces
     {
         public ParameterInfo ParameterInfo { get; }
         public Type Type { get; }
-        public string Descriptions { get; }
+        public string Description { get; }
         public bool Required { get; }
     }
 }

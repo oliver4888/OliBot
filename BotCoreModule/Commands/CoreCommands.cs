@@ -75,5 +75,12 @@ namespace BotCoreModule
             await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
             await ctx.Message.DeleteAsync();
         }
+
+        //[Command(hidden: true, permissionLevel: BotPermissionLevel.HostOwner)]
+        //[Description("Test command parameters.")]
+        //public async Task Parameters(CommandContext ctx, string test)
+        //{
+        //    await ctx.Message.Channel.SendMessageAsync(test);
+        //}
     }
 }

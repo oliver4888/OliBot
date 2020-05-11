@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using System.Collections.Generic;
 
-namespace BotCoreModule.Commands
+namespace BotCoreModule.Commands.Models
 {
     public class Command : ICommand
     {
@@ -49,7 +49,10 @@ namespace BotCoreModule.Commands
 
             IList<Type> args = new List<Type>();
             foreach (ParameterInfo param in commandMethod.GetParameters())
+            {
                 args.Add(param.ParameterType);
+                _parameters.Add(new CommandParameter(param));
+            }
             args.Add(commandMethod.ReturnType);
             Type delDecltype = Expression.GetDelegateType(args.ToArray());
 

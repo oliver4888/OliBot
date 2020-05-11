@@ -10,6 +10,7 @@ using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using BotCoreModule.Commands.Models;
 using BotCoreModule.Commands.Extensions;
 
 namespace BotCoreModule.Commands
@@ -100,7 +101,8 @@ namespace BotCoreModule.Commands
                 return;
             }
 
-            _logger.LogDebug($"Running command {(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")} for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
+            _logger.LogDebug($"Running command {(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")}" +
+                $" for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
             try
             {
@@ -108,7 +110,7 @@ namespace BotCoreModule.Commands
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error running command `{command.Name}`", ex);
+                _logger.LogError(ex, $"Error running command `{command.Name}`");
             }
         }
     }
