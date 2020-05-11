@@ -42,7 +42,7 @@ namespace BotCoreModule.Commands.Models
                 _triggers = _triggers.Concat(commandMethod.GetCustomAttribute<AliasAttribute>().Aliases).ToList();
 
             Description = commandMethod.IsDefined(typeof(DescriptionAttribute), false) ?
-                commandMethod.GetCustomAttribute<DescriptionAttribute>().DescriptionText : "No description provided.";
+                commandMethod.GetCustomAttribute<DescriptionAttribute>().DescriptionText : DescriptionAttribute.NoDescriptionText;
 
             Permissions = commandMethod.IsDefined(typeof(RequiredPermissionsAttribute), false) ?
                 commandMethod.GetCustomAttribute<RequiredPermissionsAttribute>().Permissions : Permissions.None;

@@ -19,8 +19,8 @@ namespace BotCoreModule.Commands.Models
         {
             ParameterInfo = parameter;
 
-            if (ParameterInfo.IsDefined(typeof(DescriptionAttribute), false))
-                Description = ParameterInfo.GetCustomAttribute<DescriptionAttribute>().DescriptionText;
+            Description = ParameterInfo.IsDefined(typeof(DescriptionAttribute), false) ?
+                ParameterInfo.GetCustomAttribute<DescriptionAttribute>().DescriptionText : DescriptionAttribute.NoDescriptionText;
         }
     }
 }
