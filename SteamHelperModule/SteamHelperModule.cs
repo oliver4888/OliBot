@@ -38,7 +38,7 @@ namespace SteamHelperModule
             _botCoreModule.CommandHandler.RegisterCommands<SteamCommands>();
             _botCoreModule.DiscordClient.MessageCreated += OnMessageCreated;
 
-            SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"], int.Parse(_config["AbsExpirationHourOffset"]));
+            SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"], int.Parse(_config["SlidingExpirationHours"]));
         }
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)
@@ -55,6 +55,13 @@ namespace SteamHelperModule
                 $"{(e.Channel.IsPrivate ? "DMs" : $"channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}")}");
 
             PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(itemId);
+
+            if (response.Result == 9) // Friends Only / Private
+            {
+                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":x:"));
+                return;
+            }
+
             PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
 
             await e.Channel.SendMessageAsync(embed: BuildEmbedForItem(await CreateEmptyEmbedForEvent(e), response, userResponse));
