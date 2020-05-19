@@ -23,6 +23,8 @@ namespace BotCoreModule.Commands.Models
         public IReadOnlyList<string> Triggers => _triggers as IReadOnlyList<string>;
         public string Description { get; private set; }
         public bool Hidden { get; private set; }
+        public bool DisableDMs { get; private set; }
+
         public BotPermissionLevel PermissionLevel { get; private set; }
         public Permissions Permissions { get; private set; }
 
@@ -36,6 +38,7 @@ namespace BotCoreModule.Commands.Models
             Name = (commandAttribute.CommandName == "" ? commandMethod.Name : commandAttribute.CommandName).ToLowerInvariant();
             _triggers.Add(Name);
             Hidden = commandAttribute.Hidden;
+            DisableDMs = commandAttribute.DisableDMs;
             PermissionLevel = commandAttribute.PermissionLevel;
 
             if (commandMethod.IsDefined(typeof(AliasAttribute), false))

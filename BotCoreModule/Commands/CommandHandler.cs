@@ -64,10 +64,15 @@ namespace BotCoreModule.Commands
             string commandName = e.Message.Content.Remove(0, CommandPrefix.Length).Split(" ")[0].ToLowerInvariant();
 
             if (_commands.TryGetCommand(commandName, out ICommand command))
+            {
                 if (e.Channel.IsPrivate)
-                    await HandleCommandDMs(e, command, commandName);
+                {
+                    if (!command.DisableDMs)
+                        await HandleCommandDMs(e, command, commandName);
+                }
                 else
                     await HandleCommand(e, command, commandName);
+            }
         }
 
         private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed)

@@ -16,6 +16,7 @@ namespace Common.Interfaces
         public IReadOnlyList<string> Triggers { get; }
         public string Description { get; }
         public bool Hidden { get; }
+        public bool DisableDMs { get; }
 
         public BotPermissionLevel PermissionLevel { get; }
         public Permissions Permissions { get; }
