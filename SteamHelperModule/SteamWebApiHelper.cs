@@ -24,17 +24,29 @@ namespace SteamHelperModule
         static readonly IDictionary<string, SteamItemCache> _caches = new Dictionary<string, SteamItemCache>();
         public static IReadOnlyDictionary<string, SteamItemCache> Caches => _caches as IReadOnlyDictionary<string, SteamItemCache>;
 
-        public SteamWebApiHelper(ILoggerFactory loggerFactory, string token, int slidingExpirationHours)
+        public SteamWebApiHelper(ILoggerFactory loggerFactory, string token, int slidingExpirationHours, string fileCachePath)
         {
             _logger = loggerFactory.CreateLogger<SteamWebApiHelper>();
             _client = new HttpClient();
 
             // Caches of the same endpoint should be shared between instances
             if (!_caches.ContainsKey(PublishedFileCacheKey))
-                _caches.Add(PublishedFileCacheKey, new SteamItemCache(loggerFactory.CreateLogger<SteamItemCache>(), PublishedFileCacheKey, slidingExpirationHours));
+                _caches.Add(
+                    PublishedFileCacheKey,
+                    SteamItemCache.Create<PublishedFileDetailsModel>(
+                        loggerFactory.CreateLogger<SteamItemCache>(),
+                        PublishedFileCacheKey,
+                        slidingExpirationHours,
+                        fileCachePath));
 
             if (!_caches.ContainsKey(PlayerSummaryCacheKey))
-                _caches.Add(PlayerSummaryCacheKey, new SteamItemCache(loggerFactory.CreateLogger<SteamItemCache>(), PlayerSummaryCacheKey, slidingExpirationHours));
+                _caches.Add(
+                    PlayerSummaryCacheKey,
+                    SteamItemCache.Create<PlayerSummaryModel>(
+                        loggerFactory.CreateLogger<SteamItemCache>(),
+                        PlayerSummaryCacheKey,
+                        slidingExpirationHours,
+                        fileCachePath));
 
             SteamWebInterfaceFactory = new SteamWebInterfaceFactory(token);
             SteamRemoteStorage = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamRemoteStorage>(_client);
@@ -42,9 +54,9 @@ namespace SteamHelperModule
         }
 
         public async Task<PublishedFileDetailsModel> GetPublishedFileDetails(ulong id) =>
-            (await _caches[PublishedFileCacheKey].AddOrGetExisting(id.ToString(), async () => await SteamRemoteStorage.GetPublishedFileDetailsAsync(id))).Data;
+            await _caches[PublishedFileCacheKey].AddOrGetExisting(id.ToString(), async () => (await SteamRemoteStorage.GetPublishedFileDetailsAsync(id)).Data);
 
         public async Task<PlayerSummaryModel> GetPlayerSummary(ulong id) =>
-                (await _caches[PlayerSummaryCacheKey].AddOrGetExisting(id.ToString(), async () => await SteamUser.GetPlayerSummaryAsync(id))).Data;
+                await _caches[PlayerSummaryCacheKey].AddOrGetExisting(id.ToString(), async () => (await SteamUser.GetPlayerSummaryAsync(id)).Data);
     }
 }

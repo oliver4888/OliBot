@@ -38,7 +38,7 @@ namespace SteamHelperModule
             _botCoreModule.CommandHandler.RegisterCommands<SteamCommands>();
             _botCoreModule.DiscordClient.MessageCreated += OnMessageCreated;
 
-            SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"], int.Parse(_config["SlidingExpirationHours"]));
+            SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"], int.Parse(_config["SlidingExpirationHours"]), _config["FileCachePath"]);
         }
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)

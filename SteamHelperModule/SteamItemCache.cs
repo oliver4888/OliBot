@@ -1,4 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Text.Json;
 using System.Runtime.Caching;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -10,35 +14,117 @@ namespace SteamHelperModule
         readonly ILogger<SteamItemCache> _logger;
         readonly MemoryCache _cache;
         readonly CacheItemPolicy _cachePolicy;
+        readonly string _fileCachePath;
 
-        readonly object _lockObject = new object();
+        static readonly Mutex _mutex = new Mutex();
 
         public long CacheItemCount => _cache.GetCount();
 
-        public SteamItemCache(ILogger<SteamItemCache> logger, string cacheName, int slidingExpirationHours)
+        public SteamItemCache(ILogger<SteamItemCache> logger, string cacheName, int slidingExpirationHours, string fileCachePath, Type objectType)
         {
             _logger = logger;
             _cache = new MemoryCache(cacheName);
-            _cachePolicy = new CacheItemPolicy() { SlidingExpiration = TimeSpan.FromHours(slidingExpirationHours) };
+
+            _cachePolicy = new CacheItemPolicy()
+            {
+                SlidingExpiration = TimeSpan.FromHours(slidingExpirationHours),
+                RemovedCallback = e =>
+                {
+                    try
+                    {
+                        string file = Path.Combine(_fileCachePath, e.CacheItem.Key + ".json");
+                        if (File.Exists(file))
+                        {
+                            File.Delete(file);
+                            _logger.LogDebug($"Removed cache file for {_cache.Name}/{e.CacheItem.Key}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Unable to delete cache file for {_cache.Name}/{e.CacheItem.Key}");
+                    }
+                }
+            };
+
+            _fileCachePath = Path.Combine(Environment.CurrentDirectory, fileCachePath, cacheName);
+
+            LoadFileCachedItems(objectType);
         }
 
-        public Task<T> AddOrGetExisting<T>(string key, Func<Task<T>> valueFactory)
+        private void LoadFileCachedItems(Type objectType)
         {
-            lock (_lockObject)
+            if (!Directory.Exists(_fileCachePath))
+                Directory.CreateDirectory(_fileCachePath);
+            else if (Directory.EnumerateFiles(_fileCachePath).Any())
             {
-                var newValue = new Lazy<Task<T>>(valueFactory);
-                var oldValue = _cache.AddOrGetExisting(key, newValue, _cachePolicy) as Lazy<Task<T>>;
-                try
+                Task.Factory.StartNew(() =>
                 {
-                    return (oldValue ?? newValue).Value;
+                    Parallel.ForEach(Directory.EnumerateFiles(_fileCachePath), async fileName =>
+                    {
+                        try
+                        {
+                            using FileStream fs = File.OpenRead(fileName);
+                            object data = await JsonSerializer.DeserializeAsync(fs, objectType);
+                            string key = Path.GetFileNameWithoutExtension(fileName);
+                            _cache.Add(key, data, _cachePolicy);
+                            _logger.LogDebug($"Loaded cache item from file for {_cache.Name}/{key}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Unable to load cache item from file: ${fileName}");
+                        }
+                    });
+                });
+            }
+        }
+
+        public static SteamItemCache Create<T>(ILogger<SteamItemCache> logger, string cacheName, int slidingExpirationHours, string fileCachePath) =>
+            new SteamItemCache(logger, cacheName, slidingExpirationHours, fileCachePath, typeof(T));
+
+        public async Task<T> AddOrGetExisting<T>(string key, Func<Task<T>> valueFactory)
+        {
+            try
+            {
+                _mutex.WaitOne();
+
+                if (_cache.Contains(key))
+                {
+                    return (T)_cache.Get(key);
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, $"Error fetching item from cache {_cache.Name} key {key}");
-                    _cache.Remove(key);
-                    return default;
+                    T data = await valueFactory();
+                    _cache.Add(key, data, _cachePolicy);
+
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    Task.Factory.StartNew(async () =>
+                    {
+                        try
+                        {
+                            using FileStream fs = File.Create(Path.Combine(_fileCachePath, key + ".json"));
+                            await JsonSerializer.SerializeAsync(fs, data);
+                            _logger.LogDebug($"Created cache file for {_cache.Name}/{key}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Unable to create cache file for {_cache.Name}/{key}");
+                        }
+                    });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+                    return data;
                 }
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error fetching item from cache {_cache.Name} key {key}");
+                _cache.Remove(key);
+            }
+            finally
+            {
+                _mutex.ReleaseMutex();
+            }
+            return default;
         }
     }
 }
