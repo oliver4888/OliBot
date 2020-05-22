@@ -1,4 +1,5 @@
 ﻿using Common;
+using System;
 using Common.Attributes;
 using Common.Extensions;
 using DSharpPlus.Entities;
@@ -29,11 +30,46 @@ namespace SteamHelperModule
                 await ctx.Message.DeleteAsync();
         }
 
-        /* Future commands:
-         * 
-         * Purge All Caches
-         * Purge Cache <key>
-         * Purge Cache Item <cacheKey> <itemKey>
-         */
+        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Description("Clears all Steam caches.")]
+        public async Task PurgeAllCaches(CommandContext ctx)
+        {
+            foreach (KeyValuePair<string, SteamItemCache> kvp in SteamWebApiHelper.Caches)
+                kvp.Value.Clear();
+
+            await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.BotCoreModule.DiscordClient, ":white_check_mark:"));
+        }
+
+        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Description("Clears the specified Steam cache.")]
+        public async Task PurgeCache(CommandContext ctx, string cacheName)
+        {
+            if (!SteamWebApiHelper.Caches.ContainsKey(cacheName))
+            {
+                await ctx.Message.Channel.SendMessageAsync("Unknown Steam cache, valid Steam caches:" +
+                    $"{Environment.NewLine}{string.Join(Environment.NewLine, SteamWebApiHelper.Caches.Keys)}");
+                return;
+            }
+
+            SteamWebApiHelper.Caches[cacheName].Clear();
+
+            await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.BotCoreModule.DiscordClient, ":white_check_mark:"));
+        }
+
+        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Description("Clears the specified Steam cache.")]
+        public async Task PurgeCacheItem(CommandContext ctx, string cacheName, string itemKey)
+        {
+            if (!SteamWebApiHelper.Caches.ContainsKey(cacheName))
+            {
+                await ctx.Message.Channel.SendMessageAsync("Unknown Steam cache, valid Steam caches:" +
+                    $"{Environment.NewLine}{string.Join(Environment.NewLine, SteamWebApiHelper.Caches.Keys)}");
+                return;
+            }
+
+            SteamWebApiHelper.Caches[cacheName].RemoveItem(itemKey);
+
+            await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.BotCoreModule.DiscordClient, ":white_check_mark:"));
+        }
     }
 }

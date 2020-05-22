@@ -28,22 +28,7 @@ namespace SteamHelperModule
             _cachePolicy = new CacheItemPolicy()
             {
                 SlidingExpiration = TimeSpan.FromHours(slidingExpirationHours),
-                RemovedCallback = e =>
-                {
-                    try
-                    {
-                        string file = Path.Combine(_fileCachePath, e.CacheItem.Key + ".json");
-                        if (File.Exists(file))
-                        {
-                            File.Delete(file);
-                            _logger.LogDebug($"Removed cache file for {_cache.Name}/{e.CacheItem.Key}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Unable to delete cache file for {_cache.Name}/{e.CacheItem.Key}");
-                    }
-                }
+                RemovedCallback = e => DeleteCacheFile(e.CacheItem.Key)
             };
 
             _fileCachePath = Path.Combine(Environment.CurrentDirectory, fileCachePath, cacheName);
@@ -126,5 +111,30 @@ namespace SteamHelperModule
             }
             return default;
         }
+
+        public void DeleteCacheFile(string key)
+        {
+            try
+            {
+                string file = Path.Combine(_fileCachePath, key + ".json");
+                if (File.Exists(file))
+                {
+                    File.Delete(file);
+                    _logger.LogDebug($"Removed cache file for {_cache.Name}/{key}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Unable to delete cache file for {_cache.Name}/{key}");
+            }
+        }
+
+        public void Clear()
+        {
+            foreach (string key in _cache.Select(kvp => kvp.Key))
+                RemoveItem(key);
+        }
+
+        public void RemoveItem(string key) => _cache.Remove(key);
     }
 }
