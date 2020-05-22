@@ -1,9 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2000
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OliBot", "OliBot\OliBot.csproj", "{C82714EC-2F31-4717-B737-ECB68C2D82F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotRunner", "BotRunner\BotRunner.csproj", "{61D5B51B-A0C7-4046-B392-A241C78C0958}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{E589419D-FC35-4B47-95DC-76F4DAE86821}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCoreModule", "BotCoreModule\BotCoreModule.csproj", "{1E90E35E-782F-4534-9A4F-E66D0ECBE323}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamHelperModule", "SteamHelperModule\SteamHelperModule.csproj", "{6B7A65BB-3ED4-45CF-A448-A129C28B746B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModModule", "ModModule\ModModule.csproj", "{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +19,31 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C82714EC-2F31-4717-B737-ECB68C2D82F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C82714EC-2F31-4717-B737-ECB68C2D82F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C82714EC-2F31-4717-B737-ECB68C2D82F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C82714EC-2F31-4717-B737-ECB68C2D82F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61D5B51B-A0C7-4046-B392-A241C78C0958}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61D5B51B-A0C7-4046-B392-A241C78C0958}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61D5B51B-A0C7-4046-B392-A241C78C0958}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61D5B51B-A0C7-4046-B392-A241C78C0958}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E589419D-FC35-4B47-95DC-76F4DAE86821}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E589419D-FC35-4B47-95DC-76F4DAE86821}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E589419D-FC35-4B47-95DC-76F4DAE86821}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E589419D-FC35-4B47-95DC-76F4DAE86821}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E90E35E-782F-4534-9A4F-E66D0ECBE323}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B7A65BB-3ED4-45CF-A448-A129C28B746B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {D25AC7AB-E38A-4BA0-A7A6-5FBCA7238E22}
+		SolutionGuid = {0A09000B-82C4-46B7-853F-4469E0BE754C}
 	EndGlobalSection
 EndGlobal

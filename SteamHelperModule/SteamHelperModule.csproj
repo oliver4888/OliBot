@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="COPY /b/v/y $(TargetPath) $(SolutionDir)BotRunner\bin\$(ConfigurationName)\netcoreapp3.1\Modules\$(TargetFileName)" />
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="SteamWebAPI2" Version="4.2.3" />
+    <PackageReference Include="System.Runtime.Caching" Version="4.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BotCoreModule\BotCoreModule.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+
+</Project>
