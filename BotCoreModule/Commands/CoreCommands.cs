@@ -2,12 +2,12 @@
 using System;
 using DSharpPlus;
 using System.Text;
-using System.Linq;
 using Common.Attributes;
 using Common.Extensions;
 using Common.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace BotCoreModule
 {
@@ -59,27 +59,23 @@ namespace BotCoreModule
                     .WithDescription($"Listing all commands available to {ctx.Member.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
                     .WithCustomFooterWithColour(ctx.Message, ctx.Member);
 
+            IDictionary<string, IList<string>> commandGroups = new Dictionary<string, IList<string>>();
+
             foreach (ICommand command in ctx.BotCoreModule.CommandHandler.Commands)
             {
-                if (command.Hidden ||
+                if (command.Hidden || (ctx.IsDMs && command.DisableDMs) ||
                     (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Author.Id != ctx.BotCoreModule.HostOwnerID) ||
                     (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator)))
                     continue;
 
-                StringBuilder descriptionBuilder = new StringBuilder()
-                    .AppendLine(command.Description)
-                    .AppendLine($"**Usage:** {ctx.BotCoreModule.CommandHandler.CommandPrefix}{command.Name}");
+                if (!commandGroups.ContainsKey(command.GroupName))
+                    commandGroups.Add(command.GroupName, new List<string>());
 
-                if (command.Triggers.Count > 1)
-                    descriptionBuilder.AppendLine($"**Aliases:** `{string.Join("`, `", command.Triggers.Skip(1))}`");
-
-                if (command.PermissionLevel == BotPermissionLevel.HostOwner)
-                    descriptionBuilder.AppendLine("**Host Owner Only**");
-                else if (command.PermissionLevel == BotPermissionLevel.Admin)
-                    descriptionBuilder.AppendLine("**Admin Only**");
-
-                embedBuilder.AddField(command.Name, descriptionBuilder.ToString());
+                commandGroups[command.GroupName].Add(command.Name);
             }
+
+            foreach ((string group, IList<string> commands) in commandGroups)
+                embedBuilder.AddField(group, $"`{string.Join("`, `", commands)}`");
 
             await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
 

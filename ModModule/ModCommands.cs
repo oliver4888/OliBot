@@ -11,7 +11,7 @@ namespace ModModule
 {
     public class ModCommands
     {
-        [Command(disableDMs: true)]
+        [Command(disableDMs: true, groupName: "Moderation")]
         [RequiredPermissions(Permissions.ManageMessages)]
         [Description("Clears the specified number of messages. Max 100.")]
         public async Task Clear(CommandContext ctx, int numMessages = 0)
@@ -31,7 +31,7 @@ namespace ModModule
             await DelayThenDelete(ctx, response);
         }
 
-        [Command(disableDMs: true)]
+        [Command(disableDMs: true, groupName: "Moderation")]
         [Alias("clearm")]
         [RequiredPermissions(Permissions.ManageMessages)]
         [Description("Clears messages from the current channel that are only @ mentions.")]

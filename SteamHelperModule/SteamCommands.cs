@@ -10,7 +10,7 @@ namespace SteamHelperModule
 {
     public class SteamCommands
     {
-        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Steam")]
         [Alias("SteamStats")]
         [Description("Gets stats on the MemoryCache objects used to store Steam data.")]
         public async Task CacheStats(CommandContext ctx)
@@ -30,7 +30,7 @@ namespace SteamHelperModule
                 await ctx.Message.DeleteAsync();
         }
 
-        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Steam")]
         [Description("Clears all Steam caches.")]
         public async Task PurgeAllCaches(CommandContext ctx)
         {
@@ -40,7 +40,7 @@ namespace SteamHelperModule
             await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.BotCoreModule.DiscordClient, ":white_check_mark:"));
         }
 
-        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Steam")]
         [Description("Clears the specified Steam cache.")]
         public async Task PurgeCache(CommandContext ctx, string cacheName)
         {
@@ -56,7 +56,7 @@ namespace SteamHelperModule
             await ctx.Message.CreateReactionAsync(DiscordEmoji.FromName(ctx.BotCoreModule.DiscordClient, ":white_check_mark:"));
         }
 
-        [Command(permissionLevel: BotPermissionLevel.HostOwner)]
+        [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Steam")]
         [Description("Clears the specified Steam cache.")]
         public async Task PurgeCacheItem(CommandContext ctx, string cacheName, string itemKey)
         {

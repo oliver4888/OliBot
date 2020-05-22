@@ -24,6 +24,7 @@ namespace BotCoreModule.Commands.Models
         public string Description { get; private set; }
         public bool Hidden { get; private set; }
         public bool DisableDMs { get; private set; }
+        public string GroupName { get; private set; }
 
         public BotPermissionLevel PermissionLevel { get; private set; }
         public Permissions Permissions { get; private set; }
@@ -39,6 +40,7 @@ namespace BotCoreModule.Commands.Models
             _triggers.Add(Name);
             Hidden = commandAttribute.Hidden;
             DisableDMs = commandAttribute.DisableDMs;
+            GroupName = commandAttribute.GroupName;
             PermissionLevel = commandAttribute.PermissionLevel;
 
             if (commandMethod.IsDefined(typeof(AliasAttribute), false))
