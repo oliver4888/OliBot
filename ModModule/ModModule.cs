@@ -18,6 +18,7 @@ namespace ModModule
             _logger = logger;
             _botCoreModule = botCoreModule;
 
+            _botCoreModule.CommandHandler.RegisterCommands<ModCommands>();
             _botCoreModule.DiscordClient.MessageUpdated += OnMessageUpdated;
         }
 
