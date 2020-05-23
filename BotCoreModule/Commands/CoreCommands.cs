@@ -23,6 +23,7 @@ namespace BotCoreModule
                 .WithTitle($"{client.CurrentUser.Username} Stats")
                 .AddField("Server Count", client.Guilds.Count.ToString(), true)
                 .AddField("Shard Count", client.ShardCount.ToString(), true)
+                .AddField("No. Commands", ctx.BotCoreModule.CommandHandler.Commands.Count.ToString(), true)
                 .AddField("WS Ping", $"{client.Ping}ms", true)
                 .AddField("DSharp+ Version", client.VersionString, true);
 
@@ -75,7 +76,7 @@ namespace BotCoreModule
             }
 
             foreach ((string group, IList<string> commands) in commandGroups)
-                embedBuilder.AddField(group, $"`{string.Join("`, `", commands)}`");
+                embedBuilder.AddField(group, $"`{string.Join("`, `", commands)}`", true);
 
             await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
 

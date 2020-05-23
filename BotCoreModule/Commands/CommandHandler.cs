@@ -64,7 +64,7 @@ namespace BotCoreModule.Commands
 
             if (!commands.Any())
             {
-                _logger.LogWarning($"No commands where found in the given type: {commandClass.Name}");
+                _logger.LogWarning($"No commands where found in the given type: {commandClass.FullName}");
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace BotCoreModule.Commands
             foreach (MethodInfo command in commands)
                 _commands.Add(new Command(commandClass, ref commandClassInstance, command));
 
-            _logger.LogInformation($"Registered {commands.Count()} command(s) for Type {commandClass.FullName}");
+            _logger.LogInformation($"Registered {commands.Count()} command{(commands.Count() > 1 ? "s": "")} for type {commandClass.FullName}");
         }
 
         private object ConvertParameter<T>(string value)
