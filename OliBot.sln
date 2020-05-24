@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCoreModule", "BotCoreMod
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamHelperModule", "SteamHelperModule\SteamHelperModule.csproj", "{6B7A65BB-3ED4-45CF-A448-A129C28B746B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModModule", "ModModule\ModModule.csproj", "{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModModule", "ModModule\ModModule.csproj", "{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StatusModule", "StatusModule\StatusModule.csproj", "{590759CF-A9B6-4440-9973-E453DA1EE99C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}.Release|Any CPU.Build.0 = Release|Any CPU
+		{590759CF-A9B6-4440-9973-E453DA1EE99C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{590759CF-A9B6-4440-9973-E453DA1EE99C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{590759CF-A9B6-4440-9973-E453DA1EE99C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{590759CF-A9B6-4440-9973-E453DA1EE99C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
