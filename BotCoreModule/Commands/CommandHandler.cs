@@ -73,13 +73,16 @@ namespace BotCoreModule.Commands
             foreach (MethodInfo command in commands)
                 _commands.Add(new Command(commandClass, ref commandClassInstance, command));
 
-            _logger.LogInformation($"Registered {commands.Count()} command{(commands.Count() > 1 ? "s": "")} for type {commandClass.FullName}");
+            _logger.LogInformation($"Registered {commands.Count()} command{(commands.Count() > 1 ? "s" : "")} for type {commandClass.FullName}");
         }
 
         private object ConvertParameter<T>(string value)
         {
-            if (_converters.ContainsKey(typeof(T)))
-                return (_converters[typeof(T)] as IConverter<T>).TryParse(value, out T parsedValue) ? (object)parsedValue : null;
+            Type type = typeof(T);
+            if (type.IsEnum)
+                return EnumConverter.TryParse(type, value, out object parsedValue) ? parsedValue : null;
+            else if (_converters.ContainsKey(type))
+                return (_converters[type] as IConverter<T>).TryParse(value, out T parsedValue) ? (object)parsedValue : null;
 
             _logger.LogWarning($"No converter present for type {typeof(T).FullName}");
             return null;
@@ -189,7 +192,10 @@ namespace BotCoreModule.Commands
 
             try
             {
-                await (command.MethodDelegate.DynamicInvoke(args) as Task);
+                if (command.CommandMethod.ReturnType == typeof(Task))
+                    await (command.MethodDelegate.DynamicInvoke(args) as Task);
+                else
+                    command.MethodDelegate.DynamicInvoke(args);
             }
             catch (Exception ex)
             {
