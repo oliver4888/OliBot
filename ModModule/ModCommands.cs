@@ -52,7 +52,7 @@ namespace ModModule
 
             Parallel.ForEach(discordMessages, message =>
             {
-                if (!(message.Attachments.Count == 0 && message.Embeds.Count == 0))
+                if (message.Attachments.Count == 0 && message.Embeds.Count == 0)
                 {
                     string[] words = message.Content.Split(wordSplitters);
 
