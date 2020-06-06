@@ -50,7 +50,7 @@ namespace BotCoreModule.Commands
 
             _logger.LogDebug($"{nameof(CommandHandler)}: Registered {_converters.Count} type converters.");
 
-            ConvertGeneric = GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(mi => mi.Name == nameof(ConvertParameter) && mi.ContainsGenericParameters);
+            ConvertGeneric = GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(mi => mi.Name == nameof(TryConvertParameter) && mi.ContainsGenericParameters);
         }
 
         public void RegisterCommands<T>() => RegisterCommands(typeof(T));
@@ -76,29 +76,60 @@ namespace BotCoreModule.Commands
             _logger.LogInformation($"Registered {commands.Count()} command{(commands.Count() > 1 ? "s" : "")} for type {commandClass.FullName}");
         }
 
-        private object ConvertParameter<T>(string value)
+        private bool TryConvertParameter<T>(string value, out object converted)
         {
+            converted = null;
             Type type = typeof(T);
-            if (type.IsEnum)
-                return EnumConverter.TryParse(type, value, out object parsedValue) ? parsedValue : null;
-            else if (_converters.ContainsKey(type))
-                return (_converters[type] as IConverter<T>).TryParse(value, out T parsedValue) ? (object)parsedValue : null;
 
-            _logger.LogWarning($"No converter present for type {typeof(T).FullName}");
-            return null;
+            if (type.IsEnum)
+            {
+                if (EnumConverter.TryParse(type, value, out object parsedValue))
+                {
+                    converted = parsedValue;
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning($"Unable to convert parameter to enum {type.FullName}: {value}");
+                    return false;
+                }
+            }
+            else if (_converters.ContainsKey(type))
+            {
+                if ((_converters[type] as IConverter<T>).TryParse(value, out T parsedValue))
+                {
+                    converted = parsedValue;
+                    return true;
+                }
+                else
+                {
+                    _logger.LogWarning($"Unable to convert parameter to type {type.FullName}: {value}");
+                    return false;
+                }
+            }
+
+            _logger.LogWarning($"No converter present for type {type.FullName}");
+            return false;
         }
 
-        private object ConvertParameter(string value, Type type)
+        private bool TryConvertParameter(string value, out object converted, Type type)
         {
+            converted = null;
             MethodInfo method = ConvertGeneric.MakeGenericMethod(type);
             try
             {
-                return method.Invoke(this, new object[] { value });
+                object[] parameters = new object[] { value, null };
+                if ((bool)method.Invoke(this, parameters))
+                {
+                    converted = parameters[1];
+                    return true;
+                }
+                return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Unable to convert parameter via {nameof(ConvertGeneric)}");
-                return null;
+                return false;
             }
         }
 
@@ -112,13 +143,28 @@ namespace BotCoreModule.Commands
             if (_commands.TryGetCommand(messageParts[0], out ICommand command))
             {
                 IList<object> parameters = new List<object>();
+                bool failedConversion = false;
                 for (int i = 1; i < command.Parameters.Count; i++)
                 {
                     ICommandParameter param = command.Parameters[i];
                     if (param.Type == typeof(string))
                         parameters.Add(messageParts[i]);
                     else
-                        parameters.Add(ConvertParameter(messageParts[i], param.Type));
+                    {
+                        if (TryConvertParameter(messageParts[i], out object converted, param.Type))
+                            parameters.Add(converted);
+                        else
+                        {
+                            failedConversion = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (failedConversion)
+                {
+                    await e.Channel.SendMessageAsync($"{e.Author.Mention}, unable to convert one or more command arguments.");
+                    return;
                 }
 
                 if (e.Channel.IsPrivate)
@@ -131,7 +177,7 @@ namespace BotCoreModule.Commands
             }
         }
 
-        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed, IList<object> parameters = null)
+        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed, IList<object> parameters)
         {
             if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
             {
@@ -145,7 +191,7 @@ namespace BotCoreModule.Commands
             await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None), parameters);
         }
 
-        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, IList<object> parameters = null)
+        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, IList<object> parameters)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
             CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member));
@@ -183,12 +229,10 @@ namespace BotCoreModule.Commands
             await InvokeCommand(command, ctx, parameters);
         }
 
-        private async Task InvokeCommand(ICommand command, CommandContext ctx, IList<object> parameters = null)
+        private async Task InvokeCommand(ICommand command, CommandContext ctx, IList<object> parameters)
         {
             object[] args = new object[] { ctx };
-
-            if (parameters != null)
-                args = args.Concat(parameters).ToArray();
+            args = args.Concat(parameters).ToArray();
 
             try
             {
