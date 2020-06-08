@@ -2,6 +2,7 @@
 using System;
 using DSharpPlus;
 using System.Text;
+using System.Linq;
 using Common.Attributes;
 using Common.Extensions;
 using Common.Interfaces;
@@ -48,7 +49,37 @@ namespace BotCoreModule
 
         [Command]
         [Description("Displays help information for commands available to the user that run this command.")]
-        public async Task Help(CommandContext ctx)
+        public async Task Help(CommandContext ctx,
+            [Description("Get detailed help information for a particular command.")]string commandName = null)
+        {
+            if (commandName == null)
+                await ctx.Channel.SendMessageAsync(embed: GenHelpEmbed(ctx));
+            else
+            {
+                ICommand command = ctx.BotCoreModule.CommandHandler.Commands.FirstOrDefault(c => c.Triggers.Contains(commandName));
+                if (command == null)
+                {
+                    await ctx.Channel.SendMessageAsync($"{ctx.Author.Mention}, unable to find command `{commandName}`!");
+                    return;
+                }
+                else
+                {
+                    if (HasPermissions(ctx, command))
+                        await ctx.Channel.SendMessageAsync(embed: GenHelpEmbedForCommand(ctx, command));
+                    else
+                        return;
+                }
+            }
+
+            if (!ctx.IsDMs)
+                await ctx.Message.DeleteAsync();
+        }
+
+        private bool HasPermissions(CommandContext ctx, ICommand command) => !(command.Hidden || (ctx.IsDMs && command.DisableDMs) ||
+                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Author.Id != ctx.BotCoreModule.HostOwnerID) ||
+                    (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator)));
+
+        private DiscordEmbed GenHelpEmbed(CommandContext ctx)
         {
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
                 .WithTitle($"{ctx.BotCoreModule.DiscordClient.CurrentUser.Username} Help");
@@ -57,16 +88,14 @@ namespace BotCoreModule
                 embedBuilder.WithDescription("Listing all available commands.");
             else
                 embedBuilder
-                    .WithDescription($"Listing all commands available to {ctx.Member.Mention}.") // Specify a command to see more information using: ??help <command>") // TODO
+                    .WithDescription($"Listing all commands available to {ctx.Member.Mention}.")
                     .WithCustomFooterWithColour(ctx.Message, ctx.Member);
 
             IDictionary<string, IList<string>> commandGroups = new Dictionary<string, IList<string>>();
 
             foreach (ICommand command in ctx.BotCoreModule.CommandHandler.Commands)
             {
-                if (command.Hidden || (ctx.IsDMs && command.DisableDMs) ||
-                    (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Author.Id != ctx.BotCoreModule.HostOwnerID) ||
-                    (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator)))
+                if (!HasPermissions(ctx, command))
                     continue;
 
                 if (!commandGroups.ContainsKey(command.GroupName))
@@ -78,10 +107,35 @@ namespace BotCoreModule
             foreach ((string group, IList<string> commands) in commandGroups)
                 embedBuilder.AddField(group, $"`{string.Join("`, `", commands)}`", true);
 
-            await ctx.Channel.SendMessageAsync(embed: embedBuilder.Build());
+            return embedBuilder.Build();
+        }
+
+        private DiscordEmbed GenHelpEmbedForCommand(CommandContext ctx, ICommand command)
+        {
+            DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
+                .WithTitle($"Help: {command.Name}")
+                .WithDescription(command.Description);
 
             if (!ctx.IsDMs)
-                await ctx.Message.DeleteAsync();
+                embedBuilder.WithCustomFooterWithColour(ctx.Message, ctx.Member);
+
+            if (command.Triggers.Count > 1)
+                embedBuilder.AddField("Aliases", $"`{string.Join("`, `", command.Triggers)}`");
+
+            foreach (ICommandParameter param in command.Parameters)
+            {
+                if (param.Type == typeof(CommandContext))
+                    continue;
+
+                string description = $"**Description:** {param.Description}{Environment.NewLine}**Type:** `{param.Type.Name}`";
+
+                if (!param.Required)
+                    description += $"{Environment.NewLine}**Default Value:** {param.ParameterInfo.DefaultValue}";
+
+                embedBuilder.AddField(param.ParameterInfo.Name, description);
+            }
+
+            return embedBuilder.Build();
         }
     }
 }

@@ -9,7 +9,7 @@ namespace StatusModule
     {
         [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Bot Status")]
         [Description("Changes the bots status.")]
-        public async Task SetStatus(CommandContext ctx, ActivityType type, string activity)
+        public async Task SetStatus(CommandContext ctx, ActivityType type, [RemainingText]string activity)
         {
             if (!StatusModule.IsValidStatus(type, activity))
             {
@@ -17,17 +17,14 @@ namespace StatusModule
                 return;
             }
 
-            // Temp until command system supports params or a [RemainingText] attribute
-            string content = ctx.Message.Content;
-
             StatusModule.StatusConfig.Mode = StatusMode.Manual;
             StatusModule.StatusTimer.Stop();
-            await StatusModule.SetStatus(type, content[content.IndexOf(activity)..]);
+            await StatusModule.SetStatus(type, activity);
         }
 
         [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Bot Status")]
         [Description("Adds the new custom status.")]
-        public async Task AddStatus(CommandContext ctx, ActivityType type, string activity)
+        public async Task AddStatus(CommandContext ctx, ActivityType type, [RemainingText]string activity)
         {
             if (!StatusModule.IsValidStatus(type, activity))
             {
@@ -35,10 +32,7 @@ namespace StatusModule
                 return;
             }
 
-            // Temp until command system supports params or a [RemainingText] attribute
-            string content = ctx.Message.Content;
-
-            await StatusModule.AddStatus(type, content[content.IndexOf(activity)..]);
+            await StatusModule.AddStatus(type, activity);
         }
 
         [Command(permissionLevel: BotPermissionLevel.HostOwner, groupName: "Bot Status")]
