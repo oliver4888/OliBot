@@ -119,6 +119,9 @@ namespace BotCoreModule
             if (!ctx.IsDMs)
                 embedBuilder.WithCustomFooterWithColour(ctx.Message, ctx.Member);
 
+            string usageText = $"{ctx.BotCoreModule.CommandHandler.CommandPrefix}{command.Name}";
+            embedBuilder.AddField("Usage", usageText);
+
             if (command.Triggers.Count > 1)
                 embedBuilder.AddField("Aliases", $"`{string.Join("`, `", command.Triggers)}`");
 
@@ -127,13 +130,17 @@ namespace BotCoreModule
                 if (param.Type == typeof(CommandContext))
                     continue;
 
-                string description = $"**Description:** {param.Description}{Environment.NewLine}**Type:** `{param.Type.Name}`";
+                if (param.Required)
+                    usageText += $" [{param.ParameterInfo.Name}]";
+                else
+                    usageText += $" ({param.ParameterInfo.Name}={param.ParameterInfo.DefaultValue})";
 
-                if (!param.Required)
-                    description += $"{Environment.NewLine}**Default Value:** {param.ParameterInfo.DefaultValue}";
-
-                embedBuilder.AddField(param.ParameterInfo.Name, description);
+                embedBuilder.AddField(
+                    param.ParameterInfo.Name,
+                    $"**Description:** {param.Description}{Environment.NewLine}**Type:** `{param.Type.Name}{(param.Type.IsEnum ? " (enum)" : "")}`");
             }
+
+            embedBuilder.Fields[0].Value = $"`{usageText}`";
 
             return embedBuilder.Build();
         }
