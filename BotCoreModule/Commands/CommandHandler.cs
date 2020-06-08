@@ -201,10 +201,8 @@ namespace BotCoreModule.Commands
             foreach (ICommandParameter param in command.Parameters)
             {
                 if (param.Type == typeof(CommandContext))
-                {
                     parameters.Add(ctx);
-                }
-                else if (messageParts.Count == 0)
+                else if (!messageParts.Any())
                 {
                     if (param.Required)
                     {

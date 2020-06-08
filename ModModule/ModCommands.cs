@@ -1,6 +1,7 @@
 ﻿using Common;
 using System;
 using DSharpPlus;
+using System.Linq;
 using Common.Attributes;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ namespace ModModule
                 await ctx.Channel.SendMessageAsync("Please specify a number of messages to remove. Max 100.");
                 return;
             }
+
             await ctx.Message.DeleteAsync();
 
             IReadOnlyList<DiscordMessage> messages = await ctx.Channel.GetMessagesAsync(numMessages);
@@ -39,7 +41,7 @@ namespace ModModule
         public async Task ClearMentions(CommandContext ctx, int numMessages = 100)
         {
             numMessages = Math.Clamp(numMessages, 0, 100);
-            
+
             if (numMessages == 0)
             {
                 await ctx.Channel.SendMessageAsync("Please specify a number of messages to clear mentions from. Max 100.");
@@ -71,20 +73,25 @@ namespace ModModule
                     }
 
                     if (isOnlyMentions)
-                    {
                         messagesToDelete.Add(message);
-                    }
                 }
             });
 
-            await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
+            DiscordMessage response;
 
-            DiscordMessage response = await ctx.Channel.SendMessageAsync($"Deleted {messagesToDelete.Count} message{(messagesToDelete.Count == 1 ? "" : "s")} :white_check_mark:");
+            if (messagesToDelete.Any())
+            {
+                await ctx.Channel.DeleteMessagesAsync(messagesToDelete);
+
+                response = await ctx.Channel.SendMessageAsync($"Deleted {messagesToDelete.Count} message{(messagesToDelete.Count == 1 ? "" : "s")} :white_check_mark:");
+            }
+            else
+                response = await ctx.Channel.SendMessageAsync($"No mention only messages where found in the past {numMessages} messages!");
 
             await DelayThenDelete(ctx, response);
         }
 
-        private async Task DelayThenDelete(CommandContext ctx, DiscordMessage response = null, int delay = 2000)
+        private async Task DelayThenDelete(CommandContext ctx, DiscordMessage response = null, int delay = 2500)
         {
             await Task.Delay(delay);
             try

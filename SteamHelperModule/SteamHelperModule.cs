@@ -88,9 +88,7 @@ namespace SteamHelperModule
         public async Task<DiscordEmbedBuilder> CreateEmptyEmbedForEvent(MessageCreateEventArgs e)
         {
             if (e.Channel.IsPrivate)
-            {
                 return new DiscordEmbedBuilder();
-            }
             else
             {
                 DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
@@ -115,7 +113,7 @@ namespace SteamHelperModule
                 .AddField("Last Updated", model.TimeUpdated.ToString(), true)
                 .AddField("Views", string.Format("{0:n0}", model.Views), true);
 
-            if (model.Tags.Count > 0)
+            if (model.Tags.Any())
                 builder.AddField("Tags", string.Join(", ", model.Tags), true);
 
             return builder
