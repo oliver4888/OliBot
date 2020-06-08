@@ -81,6 +81,8 @@ namespace SteamHelperModule
                     _logger.LogError(ex, $"Error deleting message {e.Message.Id}");
                 }
             }
+            else
+                await e.Message.ModifyEmbedSuppressionAsync(true);
         }
 
         public async Task<DiscordEmbedBuilder> CreateEmptyEmbedForEvent(MessageCreateEventArgs e)
@@ -102,19 +104,21 @@ namespace SteamHelperModule
             string description = string.Join(" ", Regex.Replace(model.Description, @"\[[^]]+\]", "").Split(Environment.NewLine));
 
             if (model.PreviewUrl != null)
-                builder.WithThumbnailUrl(model.PreviewUrl);
+                builder.WithThumbnail(model.PreviewUrl);
 
-            return builder
+            if (!string.IsNullOrWhiteSpace(description))
+                builder.WithDescription(description.Length > 200 ? description.Substring(0, 200).Trim() + "..." : description);
+
+            builder
                 .WithTitle($"{model.Title} by {userModel.Nickname}")
                 .WithUrl(SteamWebLinkAffix + model.PublishedFileId.ToString())
-                .WithDescription(description.Length > 200 ? description.Substring(0, 200).Trim() + "..." : description)
-                //.AddField("Author", userModel.Nickname, true)
-                //.AddField("Created", model.TimeCreated.ToString(), true)
                 .AddField("Last Updated", model.TimeUpdated.ToString(), true)
-                .AddField("Views", string.Format("{0:n0}", model.Views), true)
-                //.AddField("Favorited", string.Format("{0:n0}", model.Favorited), true)
-                //.AddField("Subscriptions", string.Format("{0:n0}", model.Subscriptions), true)
-                .AddField("Tags", string.Join(", ", model.Tags), true)
+                .AddField("Views", string.Format("{0:n0}", model.Views), true);
+
+            if (model.Tags.Count > 0)
+                builder.AddField("Tags", string.Join(", ", model.Tags), true);
+
+            return builder
                 .AddField("Steam Client Link", SteamClientLinkAffix + model.PublishedFileId.ToString())
                 .Build();
         }
