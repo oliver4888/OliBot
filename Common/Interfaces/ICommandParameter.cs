@@ -9,5 +9,6 @@ namespace Common.Interfaces
         public Type Type { get; }
         public string Description { get; }
         public bool Required { get; }
+        public bool RemainingText { get; }
     }
 }

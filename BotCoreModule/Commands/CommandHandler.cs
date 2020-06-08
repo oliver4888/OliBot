@@ -137,81 +137,44 @@ namespace BotCoreModule.Commands
         {
             if (e.Author.IsBot || !e.Message.Content.StartsWith(CommandPrefix)) return;
 
-            string[] messageParts = e.Message.Content.Remove(0, CommandPrefix.Length).Split(" ");
-            messageParts[0] = messageParts[0].ToLowerInvariant();
+            string commandText = e.Message.Content.Remove(0, CommandPrefix.Length).Split(" ")[0].ToLowerInvariant();
 
-            if (_commands.TryGetCommand(messageParts[0], out ICommand command))
-            {
-                IList<object> parameters = new List<object>();
-                bool failedConversion = false;
-                for (int i = 1; i < command.Parameters.Count; i++)
-                {
-                    ICommandParameter param = command.Parameters[i];
-                    if (param.Type == typeof(string))
-                        parameters.Add(messageParts[i]);
-                    else
-                    {
-                        if (TryConvertParameter(messageParts[i], out object converted, param.Type))
-                            parameters.Add(converted);
-                        else
-                        {
-                            failedConversion = true;
-                            break;
-                        }
-                    }
-                }
+            if (!_commands.TryGetCommand(commandText, out ICommand command))
+                return;
 
-                if (failedConversion)
-                {
-                    await e.Channel.SendMessageAsync($"{e.Author.Mention}, unable to convert one or more command arguments.");
-                    return;
-                }
-
-                if (e.Channel.IsPrivate)
-                {
-                    if (!command.DisableDMs)
-                        await HandleCommandDMs(e, command, messageParts[0], parameters);
-                }
-                else
-                    await HandleCommand(e, command, messageParts[0], parameters);
-            }
-        }
-
-        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed, IList<object> parameters)
-        {
             if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
             {
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
                 return;
             }
 
+            if (e.Channel.IsPrivate)
+            {
+                if (!command.DisableDMs)
+                    await HandleCommandDMs(e, command, commandText);
+            }
+            else
+                await HandleCommand(e, command, commandText);
+
+        }
+
+        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed)
+        {
             _logger.LogDebug($"Running command " +
                 $"{(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")} for {e.Author.Username}({e.Author.Id}) in DMs");
 
-            await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None), parameters);
+            await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None));
         }
 
-        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, IList<object> parameters)
+        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
             CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member));
 
-            switch (command.PermissionLevel)
+            if (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator))
             {
-                case BotPermissionLevel.HostOwner:
-                    if (e.Author.Id != _botCoreModuleInstance.HostOwnerID)
-                    {
-                        await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
-                        return;
-                    }
-                    break;
-                case BotPermissionLevel.Admin:
-                    if (!ctx.ChannelPermissions.HasFlag(Permissions.Administrator))
-                    {
-                        await e.Channel.SendMessageAsync($"{e.Author.Mention} This command can only be used by an administrator!");
-                        return;
-                    }
-                    break;
+                await e.Channel.SendMessageAsync($"{e.Author.Mention} This command can only be used by an administrator!");
+                return;
             }
 
             if (command.Permissions != Permissions.None && !(
@@ -226,20 +189,59 @@ namespace BotCoreModule.Commands
             _logger.LogDebug($"Running command {(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")}" +
                 $" for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
 
-            await InvokeCommand(command, ctx, parameters);
+            await InvokeCommand(command, ctx);
         }
 
-        private async Task InvokeCommand(ICommand command, CommandContext ctx, IList<object> parameters)
+        private async Task InvokeCommand(ICommand command, CommandContext ctx)
         {
-            object[] args = new object[] { ctx };
-            args = args.Concat(parameters).ToArray();
+            IList<object> parameters = new List<object>();
+
+            Queue<string> messageParts = new Queue<string>(ctx.Message.Content.Split(" ").Skip(1));
+
+            foreach (ICommandParameter param in command.Parameters)
+            {
+                if (param.Type == typeof(CommandContext))
+                {
+                    parameters.Add(ctx);
+                }
+                else if (messageParts.Count == 0)
+                {
+                    if (param.Required)
+                    {
+                        await ctx.Channel.SendMessageAsync($"{ctx.Author.Mention}, missing parameter `{param.ParameterInfo.Name}`!");
+                        return;
+                    }
+                    else
+                        parameters.Add(param.ParameterInfo.DefaultValue);
+                }
+                else if (param.Type == typeof(string))
+                {
+                    if (param.RemainingText)
+                    {
+                        parameters.Add(string.Join(" ", messageParts));
+                        break;
+                    }
+                    else
+                        parameters.Add(messageParts.Dequeue());
+                }
+                else
+                {
+                    if (TryConvertParameter(messageParts.Dequeue(), out object converted, param.Type))
+                        parameters.Add(converted);
+                    else
+                    {
+                        await ctx.Channel.SendMessageAsync($"{ctx.Author.Mention}, unable to convert parameter `{param.ParameterInfo.Name}` to `{param.Type.Name}`!");
+                        return;
+                    }
+                }
+            }
 
             try
             {
                 if (command.CommandMethod.ReturnType == typeof(Task))
-                    await (command.MethodDelegate.DynamicInvoke(args) as Task);
+                    await (command.MethodDelegate.DynamicInvoke(parameters.ToArray()) as Task);
                 else
-                    command.MethodDelegate.DynamicInvoke(args);
+                    command.MethodDelegate.DynamicInvoke(parameters.ToArray());
             }
             catch (Exception ex)
             {
