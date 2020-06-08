@@ -16,8 +16,9 @@ namespace ModModule
         [Description("Clears the specified number of messages. Max 100.")]
         public async Task Clear(CommandContext ctx, int numMessages = 0)
         {
-            if (numMessages > 100) numMessages = 100;
-            else if (numMessages == 0)
+            numMessages = Math.Clamp(numMessages, 0, 100);
+
+            if (numMessages == 0)
             {
                 await ctx.Channel.SendMessageAsync("Please specify a number of messages to remove. Max 100.");
                 return;
@@ -37,9 +38,9 @@ namespace ModModule
         [Description("Clears messages from the current channel that are only @ mentions.")]
         public async Task ClearMentions(CommandContext ctx, int numMessages = 100)
         {
-
-            if (numMessages > 100) numMessages = 100;
-            else if (numMessages == 0)
+            numMessages = Math.Clamp(numMessages, 0, 100);
+            
+            if (numMessages == 0)
             {
                 await ctx.Channel.SendMessageAsync("Please specify a number of messages to clear mentions from. Max 100.");
                 return;
