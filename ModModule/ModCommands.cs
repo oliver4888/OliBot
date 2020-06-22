@@ -65,7 +65,7 @@ namespace ModModule
                     {
                         if (string.IsNullOrWhiteSpace(word) || word == "@everyone" || word == "@here") break;
 
-                        if (!Regex.Match(word, @"^<@!?\d{18}>$").Success)
+                        if (!Regex.Match(word, @"^<@[!&]?\d{18}>$").Success)
                         {
                             isOnlyMentions = false;
                             break;
