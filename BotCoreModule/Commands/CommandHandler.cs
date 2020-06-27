@@ -76,6 +76,31 @@ namespace BotCoreModule.Commands
             _logger.LogInformation($"Registered {commands.Count()} command{(commands.Count() > 1 ? "s" : "")} for type {commandClass.FullName}");
         }
 
+        public void RegisterConverter<T>() => RegisterConverter(typeof(T));
+
+        public void RegisterConverter(Type converter)
+        {
+            if (converter == null)
+                throw new ArgumentNullException(nameof(converter));
+
+            if (!typeof(IGenericConverter).IsAssignableFrom(converter))
+                throw new ArgumentException($"{typeof(IGenericConverter).FullName} is not assignable from {converter.FullName}.", nameof(converter));
+
+            Type iConverterType = converter.GetInterface($"{nameof(IConverter<int>)}`1");
+
+            if (iConverterType == null)
+                throw new ArgumentException($"{converter.FullName} does not implement {nameof(IConverter<int>)}.");
+
+            Type conversionType = iConverterType.GenericTypeArguments[0]; // nameof(IConverter<int>) will return IConverter
+
+            if (_converters.ContainsKey(conversionType))
+                _logger.LogWarning($"Ignoring duplicate converter registration for type {conversionType.FullName}");
+            else
+                _converters.Add(
+                    conversionType,
+                    Activator.CreateInstance(converter) as IGenericConverter);
+        }
+
         private bool TryConvertParameter<T>(string value, out object converted)
         {
             converted = null;

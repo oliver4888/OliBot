@@ -10,5 +10,8 @@ namespace Common.Interfaces
 
         public void RegisterCommands<T>();
         public void RegisterCommands(Type commandClass);
+        
+        public void RegisterConverter<T>();
+        public void RegisterConverter(Type converter);
     }
 }
