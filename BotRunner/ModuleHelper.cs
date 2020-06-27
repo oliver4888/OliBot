@@ -12,17 +12,37 @@ namespace BotRunner
         public static IEnumerable<Assembly> ModuleAssemblies { get; private set; } = new List<Assembly>();
         public static IEnumerable<Type> ModuleTypes { get; private set; } = new List<Type>();
 
+        private static IEnumerable<string> PossibleDependencies;
+
+        static readonly string _moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
+
         public static void LoadModules()
         {
-            string moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
+            if (!Directory.Exists(_moduleFolder))
+                Directory.CreateDirectory(_moduleFolder);
 
-            if (!Directory.Exists(moduleFolder))
-                Directory.CreateDirectory(moduleFolder);
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingDependency;
 
-            ModuleAssemblies = LoadAssemblies(Directory.EnumerateFiles(moduleFolder).Where(file => file.EndsWith("Module.dll")));
+            IEnumerable<string> dlls = Directory.EnumerateFiles(_moduleFolder);
+
+            PossibleDependencies = dlls.Where(file => file.EndsWith(".dll") && !file.EndsWith("Module.dll"));
+            
+            ModuleAssemblies = LoadAssemblies(dlls.Where(file => file.EndsWith("Module.dll")));
 
             ModuleTypes = ModuleAssemblies.SelectMany(assembly => assembly.GetTypes())
                .Where(type => type.Name.EndsWith("Module") && type.IsDefined(typeof(ModuleAttribute), false));
+        }
+
+        private static Assembly ResolveMissingDependency(object sender, ResolveEventArgs args)
+        {
+            if (PossibleDependencies == null)
+                return null;
+
+            string dep = PossibleDependencies.FirstOrDefault(item => item == Path.Combine(_moduleFolder, args.Name.Remove(args.Name.IndexOf(',')) + ".dll"));
+            if (dep == null)
+                return null;
+            else
+                return Assembly.LoadFile(dep);
         }
 
         static IEnumerable<Assembly> LoadAssemblies(IEnumerable<string> files)
