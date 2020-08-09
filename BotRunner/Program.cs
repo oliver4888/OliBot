@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Common;
+using System;
 using Serilog;
 using System.IO;
+using System.Linq;
 using Common.Attributes;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace BotRunner
 {
@@ -31,16 +33,35 @@ namespace BotRunner
                 {
                     services
                         .AddSingleton(configuration)
-                        .AddHostedService<Worker>()
                         .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
 
-                    foreach (Type module in ModuleHelper.ModuleTypes)
+                    MethodInfo addHostedServiceMethod =
+                        typeof(ServiceCollectionHostedServiceExtensions).GetMethods()
+                            .Single(mi =>
+                                mi.Name == nameof(ServiceCollectionHostedServiceExtensions.AddHostedService)
+                                && mi.GetParameters().Length == 1);
+
+                    foreach (Type type in ModuleHelper.DependencyInjectedTypes)
                     {
-                        Type implements = module.GetCustomAttribute<ModuleAttribute>().Implements;
-                        if (implements == null)
-                            services.AddSingleton(module);
-                        else
-                            services.AddSingleton(implements, module);
+                        switch (type.GetCustomAttribute<DependencyInjectedAttribute>().Type)
+                        {
+                            case DIType.HostedService:
+                                addHostedServiceMethod.MakeGenericMethod(type).Invoke(services, new object[] { services });
+                                continue;
+                            case DIType.Transient:
+                                services.AddTransient(type);
+                                continue;
+                            case DIType.Scoped:
+                                services.AddScoped(type);
+                                continue;
+                            case DIType.Singleton:
+                                Type implements = type.GetCustomAttribute<ModuleAttribute>()?.Implements;
+                                if (implements == null)
+                                    services.AddSingleton(type);
+                                else
+                                    services.AddSingleton(implements, type);
+                                continue;
+                        }
                     }
                 })
                 .RunConsoleAsync();

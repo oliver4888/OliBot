@@ -10,7 +10,7 @@ namespace BotRunner
     public static class ModuleHelper
     {
         public static IEnumerable<Assembly> ModuleAssemblies { get; private set; } = new List<Assembly>();
-        public static IEnumerable<Type> ModuleTypes { get; private set; } = new List<Type>();
+        public static IEnumerable<Type> DependencyInjectedTypes { get; private set; } = new List<Type>();
 
         private static IEnumerable<string> PossibleDependencies;
 
@@ -26,11 +26,13 @@ namespace BotRunner
             IEnumerable<string> dlls = Directory.EnumerateFiles(_moduleFolder);
 
             PossibleDependencies = dlls.Where(file => file.EndsWith(".dll") && !file.EndsWith("Module.dll"));
-            
+
             ModuleAssemblies = LoadAssemblies(dlls.Where(file => file.EndsWith("Module.dll")));
 
-            ModuleTypes = ModuleAssemblies.SelectMany(assembly => assembly.GetTypes())
-               .Where(type => type.Name.EndsWith("Module") && type.IsDefined(typeof(ModuleAttribute), false));
+            DependencyInjectedTypes = ModuleAssemblies
+                .Concat(new List<Assembly> { Assembly.GetExecutingAssembly() })
+                .SelectMany(assembly => assembly.GetTypes())
+                .Where(type => type.IsDefined(typeof(DependencyInjectedAttribute), false));
         }
 
         private static Assembly ResolveMissingDependency(object sender, ResolveEventArgs args)
