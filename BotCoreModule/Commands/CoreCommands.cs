@@ -6,24 +6,29 @@ using System.Linq;
 using Common.Attributes;
 using Common.Extensions;
 using Common.Interfaces;
+using System.Reflection;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace BotCoreModule
 {
     public class CoreCommands
     {
+        readonly PropertyInfo _userCacheProperty = typeof(DiscordClient).GetProperty("UserCache", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
         [Command]
         [Description("Returns some general stats on the bot.")]
         public async Task Stats(CommandContext ctx)
         {
             DiscordClient client = ctx.BotCoreModule.DiscordClient;
+            var userCache = (ConcurrentDictionary<ulong, DiscordUser>)_userCacheProperty.GetValue(client);
 
             DiscordEmbedBuilder builder = new DiscordEmbedBuilder()
                 .WithTitle($"{client.CurrentUser.Username} Stats")
                 .AddField("Server Count", client.Guilds.Count.ToString(), true)
-                .AddField("Shard Count", client.ShardCount.ToString(), true)
+                .AddField("Cached Users", userCache.Count.ToString(), true)
                 .AddField("No. Commands", ctx.BotCoreModule.CommandHandler.Commands.Count.ToString(), true)
                 .AddField("WS Ping", $"{client.Ping}ms", true)
                 .AddField("DSharp+ Version", client.VersionString, true);
