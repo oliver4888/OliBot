@@ -4,10 +4,10 @@ namespace Common.Extensions
 {
     public static class DiscordEmbedBuilderExtensions
     {
-        public static DiscordEmbedBuilder WithCustomFooterWithColour(this DiscordEmbedBuilder builder, DiscordMessage message, DiscordMember member) =>
+        public static DiscordEmbedBuilder WithCustomFooterWithColour(this DiscordEmbedBuilder builder, CommandContext ctx) =>
             builder
-                .WithTimestamp(message.Id)
-                .WithColor(member.Color)
-                .WithFooter($"{member.Username} used {message.Content.Split(' ')[0].ToLowerInvariant()}", member.AvatarUrl);
+                .WithTimestamp(ctx.Message.Id)
+                .WithColor(ctx.Member.Color)
+                .WithFooter($"{ctx.Member.Username} used {ctx.AliasUsed}", ctx.Member.AvatarUrl);
     }
 }

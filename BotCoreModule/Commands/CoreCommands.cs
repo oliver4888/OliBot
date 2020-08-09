@@ -29,7 +29,7 @@ namespace BotCoreModule
                 .AddField("DSharp+ Version", client.VersionString, true);
 
             if (!ctx.IsDMs)
-                builder.WithCustomFooterWithColour(ctx.Message, ctx.Member);
+                builder.WithCustomFooterWithColour(ctx);
 
             TimeSpan uptime = DateTime.Now - ctx.BotCoreModule.StartTime;
             StringBuilder uptimeBuilder = new StringBuilder();
@@ -89,7 +89,7 @@ namespace BotCoreModule
             else
                 embedBuilder
                     .WithDescription($"Listing all commands available to {ctx.Member.Mention}.")
-                    .WithCustomFooterWithColour(ctx.Message, ctx.Member);
+                    .WithCustomFooterWithColour(ctx);
 
             IDictionary<string, IList<string>> commandGroups = new Dictionary<string, IList<string>>();
 
@@ -117,7 +117,7 @@ namespace BotCoreModule
                 .WithDescription(command.Description);
 
             if (!ctx.IsDMs)
-                embedBuilder.WithCustomFooterWithColour(ctx.Message, ctx.Member);
+                embedBuilder.WithCustomFooterWithColour(ctx);
 
             string usageText = $"{ctx.BotCoreModule.CommandHandler.CommandPrefix}{command.Name}";
             embedBuilder.AddField("Usage", usageText);

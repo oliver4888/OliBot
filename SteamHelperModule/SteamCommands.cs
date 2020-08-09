@@ -19,7 +19,7 @@ namespace SteamHelperModule
                 .WithTitle($"{nameof(SteamHelperModule)} Cache Stats");
 
             if (!ctx.IsDMs)
-                builder.WithCustomFooterWithColour(ctx.Message, ctx.Member);
+                builder.WithCustomFooterWithColour(ctx);
 
             foreach (KeyValuePair<string, SteamItemCache> kvp in SteamWebApiHelper.Caches)
                 builder.AddField(kvp.Key, $"{kvp.Value.CacheItemCount} items");

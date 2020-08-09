@@ -26,7 +26,11 @@ namespace Common
 
         public bool IsDMs => Channel.IsPrivate;
 
-        public CommandContext(MessageCreateEventArgs messageCreateEventArgs, IBotCoreModule botCoreModule, DiscordMember discordMember, Permissions channelPermissions)
+        public string AliasUsed { get; private set; }
+        public string ArgumentString { get; private set; }
+
+        public CommandContext(MessageCreateEventArgs messageCreateEventArgs, IBotCoreModule botCoreModule,
+            DiscordMember discordMember, Permissions channelPermissions, string aliasUsed, string argumentString)
         {
             _event = messageCreateEventArgs;
 
@@ -34,6 +38,9 @@ namespace Common
             Member = discordMember;
 
             ChannelPermissions = channelPermissions;
+
+            AliasUsed = aliasUsed;
+            ArgumentString = argumentString;
         }
     }
 }

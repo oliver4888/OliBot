@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using BotCoreModule.Commands.Models;
 using BotCoreModule.Commands.Converters;
 using BotCoreModule.Commands.Extensions;
+using System.Collections;
 
 namespace BotCoreModule.Commands
 {
@@ -160,11 +161,23 @@ namespace BotCoreModule.Commands
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)
         {
-            if (e.Author.IsBot || !e.Message.Content.StartsWith(CommandPrefix)) return;
+            if (e.Author.IsBot) return;
 
-            string commandText = e.Message.Content.Remove(0, CommandPrefix.Length).Split(" ")[0].ToLowerInvariant();
+            ulong id = _botCoreModuleInstance.DiscordClient.CurrentUser.Id;
+            string mentionString1 = $"<@{id}>", mentionString2 = $"<@!{id}>";
 
-            if (!_commands.TryGetCommand(commandText, out ICommand command))
+            string[] messageParts = e.Message.Content.Split(" ");
+
+            string aliasUsed;
+
+            if (messageParts[0].StartsWith(CommandPrefix))
+                aliasUsed = messageParts[0].Substring(CommandPrefix.Length, messageParts[0].Length - CommandPrefix.Length).ToLowerInvariant();
+            else if (messageParts[0] == mentionString1 || messageParts[0] == mentionString2)
+                aliasUsed = messageParts[1].ToLowerInvariant();
+            else
+                return;
+
+            if (!_commands.TryGetCommand(aliasUsed, out ICommand command))
                 return;
 
             if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
@@ -173,28 +186,30 @@ namespace BotCoreModule.Commands
                 return;
             }
 
+            string argumentString = string.Join(" ", messageParts.Skip(1));
+
             if (e.Channel.IsPrivate)
             {
                 if (!command.DisableDMs)
-                    await HandleCommandDMs(e, command, commandText);
+                    await HandleCommandDMs(e, command, aliasUsed, argumentString);
             }
             else
-                await HandleCommand(e, command, commandText);
+                await HandleCommand(e, command, aliasUsed, argumentString);
 
         }
 
-        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed)
+        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed, string argumentString)
         {
             _logger.LogDebug($"Running command " +
                 $"{(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")} for {e.Author.Username}({e.Author.Id}) in DMs");
 
-            await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None));
+            await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None, aliasUsed, argumentString));
         }
 
-        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed)
+        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, string argumentString)
         {
             DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
-            CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member));
+            CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member), aliasUsed, argumentString);
 
             if (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator))
             {
@@ -221,7 +236,7 @@ namespace BotCoreModule.Commands
         {
             IList<object> parameters = new List<object>();
 
-            Queue<string> messageParts = new Queue<string>(ctx.Message.Content.Split(" ").Skip(1));
+            Queue<string> messageParts = new Queue<string>(ctx.ArgumentString.Split(" ").Skip(1));
 
             foreach (ICommandParameter param in command.Parameters)
             {
