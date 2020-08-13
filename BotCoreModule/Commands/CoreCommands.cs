@@ -124,7 +124,11 @@ namespace BotCoreModule
             if (!ctx.IsDMs)
                 embedBuilder.WithCustomFooterWithColour(ctx);
 
-            string usageText = $"{ctx.BotCoreModule.CommandHandler.CommandPrefix}{command.Name}";
+            string prefix = string.IsNullOrWhiteSpace(ctx.BotCoreModule.CommandHandler.CommandPrefix) ?
+                ctx.BotCoreModule.DiscordClient.CurrentUser.Mention + " "
+                : ctx.BotCoreModule.CommandHandler.CommandPrefix;
+
+            string usageText = $"{prefix}{command.Name}";
             embedBuilder.AddField("Usage", usageText);
 
             if (command.Triggers.Count > 1)

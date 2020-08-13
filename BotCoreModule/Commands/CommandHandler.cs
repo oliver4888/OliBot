@@ -13,7 +13,6 @@ using Microsoft.Extensions.Logging;
 using BotCoreModule.Commands.Models;
 using BotCoreModule.Commands.Converters;
 using BotCoreModule.Commands.Extensions;
-using System.Collections;
 
 namespace BotCoreModule.Commands
 {
@@ -170,8 +169,8 @@ namespace BotCoreModule.Commands
 
             string aliasUsed;
 
-            if (messageParts[0].StartsWith(CommandPrefix))
-                aliasUsed = messageParts[0].Substring(CommandPrefix.Length, messageParts[0].Length - CommandPrefix.Length).ToLowerInvariant();
+            if (!string.IsNullOrWhiteSpace(CommandPrefix) && messageParts[0].StartsWith(CommandPrefix))
+                aliasUsed = messageParts[0][CommandPrefix.Length..].ToLowerInvariant();
             else if (messageParts[0] == mentionString1 || messageParts[0] == mentionString2)
                 aliasUsed = messageParts[1].ToLowerInvariant();
             else
