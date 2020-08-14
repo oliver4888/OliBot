@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Common.Attributes;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
 namespace BotRunner
 {
@@ -12,13 +13,22 @@ namespace BotRunner
         public static IEnumerable<Assembly> ModuleAssemblies { get; private set; } = new List<Assembly>();
         public static IEnumerable<Type> DependencyInjectedTypes { get; private set; } = new List<Type>();
 
-        private static IEnumerable<string> PossibleDependencies;
+        static IEnumerable<string> PossibleDependencies;
 
-        static readonly string _moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
+        static string _moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
 
-        public static void LoadModules()
+        public static void LoadModules(IConfiguration configuration)
         {
-            if (!Directory.Exists(_moduleFolder))
+            string depFolder = configuration["debug-module-folder"];
+
+            if (depFolder != null)
+            {
+                if (Path.IsPathFullyQualified(depFolder))
+                    _moduleFolder = depFolder;
+                else
+                    _moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), depFolder);
+            }
+            else if (!Directory.Exists(_moduleFolder))
                 Directory.CreateDirectory(_moduleFolder);
 
             AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingDependency;
@@ -35,7 +45,7 @@ namespace BotRunner
                 .Where(type => type.IsDefined(typeof(DependencyInjectedAttribute), false));
         }
 
-        private static Assembly ResolveMissingDependency(object sender, ResolveEventArgs args)
+        static Assembly ResolveMissingDependency(object sender, ResolveEventArgs args)
         {
             if (PossibleDependencies == null)
                 return null;

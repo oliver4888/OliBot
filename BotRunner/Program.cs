@@ -14,11 +14,12 @@ namespace BotRunner
 {
     static class Program
     {
-        static async Task Main()
+        static async Task Main(string[] args)
         {
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false)
+                .AddCommandLine(args)
                 .Build();
 
             Log.Logger = new LoggerConfiguration()
@@ -26,7 +27,7 @@ namespace BotRunner
                 .Enrich.FromLogContext()
                 .CreateLogger();
 
-            ModuleHelper.LoadModules();
+            ModuleHelper.LoadModules(configuration);
 
             await new HostBuilder()
                 .ConfigureServices((hostContext, services) =>
