@@ -19,7 +19,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
     <PackageReference Include="SteamWebAPI2" Version="4.2.5" />
     <PackageReference Include="System.Runtime.Caching" Version="4.7.0" />
-    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
 
   <ItemGroup>

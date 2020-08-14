@@ -19,8 +19,4 @@
     <ProjectReference Include="..\Common\Common.csproj" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="COPY /b/v/y $(TargetPath) $(SolutionDir)BotRunner\bin\$(ConfigurationName)\netcoreapp3.1\Modules\$(TargetFileName)" />
-  </Target>
-
 </Project>
