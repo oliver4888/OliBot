@@ -19,7 +19,7 @@ namespace BotRunner
 
         public static void LoadModules(IConfiguration configuration)
         {
-            string depFolder = configuration["debug-module-folder"];
+            string depFolder = configuration[CommandLineFlags.DebugModuleFolder];
 
             if (depFolder != null)
             {
@@ -36,6 +36,10 @@ namespace BotRunner
             IEnumerable<string> dlls = Directory.EnumerateFiles(_moduleFolder);
 
             PossibleDependencies = dlls.Where(file => file.EndsWith(".dll") && !file.EndsWith("Module.dll"));
+
+            string loadModules = configuration[CommandLineFlags.DebugLoadModules];
+            if (loadModules != null)
+                dlls = dlls.Concat(loadModules.Split(",")).Distinct();
 
             ModuleAssemblies = LoadAssemblies(dlls.Where(file => file.EndsWith("Module.dll")));
 
