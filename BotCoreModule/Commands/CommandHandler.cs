@@ -40,15 +40,14 @@ namespace BotCoreModule.Commands
 
             // Auto register default converters
             GetType().Assembly.GetTypes().Where(t =>
-                !t.IsInterface
-                && string.Equals(t.Namespace, typeof(IGenericConverter).Namespace, StringComparison.Ordinal)
-                && typeof(IGenericConverter).IsAssignableFrom(t))
+                !t.IsInterface && typeof(IGenericConverter).IsAssignableFrom(t))
                     .ToList().ForEach(t =>
                         _converters.Add(
                             t.GetInterface($"{nameof(IConverter<int>)}`1").GenericTypeArguments[0], // nameof(IConverter<int>) will return IConverter
                             Activator.CreateInstance(t) as IGenericConverter));
 
-            _logger.LogDebug($"{nameof(CommandHandler)}: Registered {_converters.Count} type converters.");
+            // + 1: EnumConverter
+            _logger.LogDebug($"{nameof(CommandHandler)}: Registered {_converters.Count + 1} type converters.");
 
             ConvertGeneric = GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(mi => mi.Name == nameof(TryConvertParameter) && mi.ContainsGenericParameters);
         }
@@ -101,7 +100,7 @@ namespace BotCoreModule.Commands
                     Activator.CreateInstance(converter) as IGenericConverter);
         }
 
-        private bool TryConvertParameter<T>(string value, out object converted)
+        private bool TryConvertParameter<T>(string value, CommandContext ctx, out object converted)
         {
             converted = null;
             Type type = typeof(T);
@@ -121,7 +120,7 @@ namespace BotCoreModule.Commands
             }
             else if (_converters.ContainsKey(type))
             {
-                if ((_converters[type] as IConverter<T>).TryParse(value, out T parsedValue))
+                if ((_converters[type] as IConverter<T>).TryParse(value, ctx, out T parsedValue))
                 {
                     converted = parsedValue;
                     return true;
@@ -137,16 +136,16 @@ namespace BotCoreModule.Commands
             return false;
         }
 
-        private bool TryConvertParameter(string value, out object converted, Type type)
+        private bool TryConvertParameter(string value, CommandContext ctx, out object converted, Type type)
         {
             converted = null;
             MethodInfo method = ConvertGeneric.MakeGenericMethod(type);
             try
             {
-                object[] parameters = new object[] { value, null };
+                object[] parameters = new object[] { value, ctx, null };
                 if ((bool)method.Invoke(this, parameters))
                 {
-                    converted = parameters[1];
+                    converted = parameters[2];
                     return true;
                 }
                 return false;
@@ -263,7 +262,7 @@ namespace BotCoreModule.Commands
                 }
                 else
                 {
-                    if (TryConvertParameter(messageParts.Dequeue(), out object converted, param.Type))
+                    if (TryConvertParameter(messageParts.Dequeue(), ctx, out object converted, param.Type))
                         parameters.Add(converted);
                     else
                     {

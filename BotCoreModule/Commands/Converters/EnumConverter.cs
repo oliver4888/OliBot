@@ -14,9 +14,7 @@ namespace BotCoreModule.Commands.Converters
 
             if (int.TryParse(value, out int intValue))
                 if (!Enum.IsDefined(type, intValue))
-                {
                     return false;
-                }
                 else
                 {
                     parsedValue = Enum.Parse(type, value, true);

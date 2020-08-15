@@ -13,7 +13,7 @@ namespace BotCoreModule.Tests.Converters
         [TestCase("RandomText", false, false)]
         public void WillParseCorrectly(string input, bool willConvert, bool expectedOutput)
         {
-            Assert.AreEqual(willConvert, _converter.TryParse(input, out bool parsed));
+            Assert.AreEqual(willConvert, _converter.TryParse(input, null, out bool parsed));
 
             if (willConvert)
                 Assert.AreEqual(expectedOutput, parsed);

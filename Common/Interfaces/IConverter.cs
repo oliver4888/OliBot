@@ -2,7 +2,7 @@
 {
     public interface IConverter<T> : IGenericConverter
     {
-        public bool TryParse(string input, out T parsedValue);
+        public bool TryParse(string input, CommandContext ctx, out T parsedValue);
     }
 
     public interface IGenericConverter { }
