@@ -9,7 +9,7 @@ namespace BotCoreModule.Commands.Converters
         {
             parsedValue = null;
 
-            if (!type.IsEnum)
+            if (!type.IsEnum || string.IsNullOrWhiteSpace(value))
                 return false;
 
             if (int.TryParse(value, out int intValue))

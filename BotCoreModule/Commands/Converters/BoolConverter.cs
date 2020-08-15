@@ -1,4 +1,6 @@
-﻿namespace BotCoreModule.Commands.Converters
+﻿using Common.Interfaces;
+
+namespace BotCoreModule.Commands.Converters
 {
     public class BoolConverter : IConverter<bool>
     {
