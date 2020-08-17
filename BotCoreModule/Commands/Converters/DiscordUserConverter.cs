@@ -17,7 +17,7 @@ namespace BotCoreModule.Commands.Converters
 
             Match match = _userPattern.Match(input);
 
-            if (!match.Success || !ulong.TryParse(match.Groups[0].Value, out ulong userId))
+            if (!match.Success || !ulong.TryParse(match.Groups[1].Value, out ulong userId))
                 return false;
 
             parsedValue = ctx.BotCoreModule.DiscordClient.GetUserAsync(userId).Result;

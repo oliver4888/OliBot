@@ -18,7 +18,7 @@ namespace BotCoreModule.Commands.Converters
 
             Match match = _rolePattern.Match(input);
 
-            if (!match.Success || !ulong.TryParse(match.Groups[0].Value, out ulong roleId))
+            if (!match.Success || !ulong.TryParse(match.Groups[1].Value, out ulong roleId))
                 return false;
 
             parsedValue = ctx.Guild.GetRole(roleId);
