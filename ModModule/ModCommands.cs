@@ -144,13 +144,12 @@ namespace ModModule
             try
             {
                 await member.RemoveAsync(reason);
+                await ctx.Message.RespondAsync("Goodbye! :wave: They're gone.");
             }
             catch (Exception)
             {
                 await ctx.Message.RespondAsync("Ah :poop: something went wrong.");
             }
-
-            await ctx.Message.RespondAsync("Goodbye! :wave: They're gone.");
         }
 
         #region Helper Methods

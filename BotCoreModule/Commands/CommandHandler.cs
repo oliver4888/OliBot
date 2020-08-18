@@ -171,7 +171,10 @@ namespace BotCoreModule.Commands
             if (!string.IsNullOrWhiteSpace(CommandPrefix) && messageParts[0].StartsWith(CommandPrefix))
                 aliasUsed = messageParts[0][CommandPrefix.Length..].ToLowerInvariant();
             else if (messageParts[0] == mentionString1 || messageParts[0] == mentionString2)
+            {
                 aliasUsed = messageParts[1].ToLowerInvariant();
+                messageParts = messageParts.Skip(1).ToArray();
+            }
             else
                 return;
 
@@ -234,7 +237,7 @@ namespace BotCoreModule.Commands
         {
             IList<object> parameters = new List<object>();
 
-            Queue<string> messageParts = new Queue<string>(ctx.ArgumentString.Split(" ").Skip(1));
+            Queue<string> messageParts = new Queue<string>(ctx.ArgumentString.Split(" "));
 
             foreach (ICommandParameter param in command.Parameters)
             {
