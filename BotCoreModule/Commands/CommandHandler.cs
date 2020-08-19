@@ -63,7 +63,7 @@ namespace BotCoreModule.Commands
 
             if (!commands.Any())
             {
-                _logger.LogWarning($"No commands where found in the given type: {commandClass.FullName}");
+                _logger.LogWarning($"No commands were found in type: {commandClass.FullName}");
                 return;
             }
 
