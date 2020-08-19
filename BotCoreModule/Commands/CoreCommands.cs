@@ -2,7 +2,6 @@
 using System;
 using DSharpPlus;
 using System.Text;
-using System.Linq;
 using Common.Attributes;
 using Common.Extensions;
 using Common.Interfaces;
@@ -55,14 +54,13 @@ namespace BotCoreModule
         [Command]
         [Description("Displays help information for commands available to the user that run this command.")]
         public async Task Help(CommandContext ctx,
-            [Description("Get detailed help information for a particular command.")]string commandName = null)
+            [Description("Get detailed help information for a particular command.")] string commandName = null)
         {
-            if (commandName == null)
+            if (string.IsNullOrWhiteSpace(commandName))
                 await ctx.Channel.SendMessageAsync(embed: GenHelpEmbed(ctx));
             else
             {
-                ICommand command = ctx.BotCoreModule.CommandHandler.Commands.FirstOrDefault(c => c.Triggers.Contains(commandName));
-                if (command == null)
+                if (!ctx.BotCoreModule.CommandHandler.TryGetCommand(commandName, out ICommand command))
                 {
                     await ctx.Channel.SendMessageAsync($"{ctx.Author.Mention}, unable to find command `{commandName}`!");
                     return;
@@ -86,14 +84,21 @@ namespace BotCoreModule
 
         private DiscordEmbed GenHelpEmbed(CommandContext ctx)
         {
+            string botName = ctx.BotCoreModule.DiscordClient.CurrentUser.Username;
+
+            string commandPrefix = ctx.BotCoreModule.CommandHandler.CommandPrefix;
+            bool useCommandPrefix = !string.IsNullOrWhiteSpace(commandPrefix);
+
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
-                .WithTitle($"{ctx.BotCoreModule.DiscordClient.CurrentUser.Username} Help");
+                .WithTitle($"{botName} Help");
+
+            string moreHelpMsg = $"{Environment.NewLine}Use `{(useCommandPrefix ? commandPrefix : $"@{botName} ")}help <command>` for help with a specific command.";
 
             if (ctx.IsDMs)
-                embedBuilder.WithDescription("Listing all available commands.");
+                embedBuilder.WithDescription($"Listing all available commands.{moreHelpMsg}");
             else
                 embedBuilder
-                    .WithDescription($"Listing all commands available to {ctx.Member.Mention}.")
+                    .WithDescription($"Listing all commands available to {ctx.Member.Mention}.{moreHelpMsg}")
                     .WithCustomFooterWithColour(ctx);
 
             IDictionary<string, IList<string>> commandGroups = new Dictionary<string, IList<string>>();
@@ -117,18 +122,19 @@ namespace BotCoreModule
 
         private DiscordEmbed GenHelpEmbedForCommand(CommandContext ctx, ICommand command)
         {
+            string botName = ctx.BotCoreModule.DiscordClient.CurrentUser.Username;
+
+            string commandPrefix = ctx.BotCoreModule.CommandHandler.CommandPrefix;
+            bool useCommandPrefix = !string.IsNullOrWhiteSpace(commandPrefix);
+
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder()
-                .WithTitle($"Help: {command.Name}")
+                .WithTitle($"{botName} Help: {command.Name}")
                 .WithDescription(command.Description);
 
             if (!ctx.IsDMs)
                 embedBuilder.WithCustomFooterWithColour(ctx);
 
-            string prefix = string.IsNullOrWhiteSpace(ctx.BotCoreModule.CommandHandler.CommandPrefix) ?
-                ctx.BotCoreModule.DiscordClient.CurrentUser.Mention + " "
-                : ctx.BotCoreModule.CommandHandler.CommandPrefix;
-
-            string usageText = $"{prefix}{command.Name}";
+            string usageText = $"{(useCommandPrefix ? commandPrefix : $"@{botName} ")}{command.Name}";
             embedBuilder.AddField("Usage", usageText);
 
             if (command.Triggers.Count > 1)

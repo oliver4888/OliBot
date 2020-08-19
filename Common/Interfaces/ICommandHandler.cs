@@ -13,5 +13,7 @@ namespace Common.Interfaces
         
         public void RegisterConverter<T>();
         public void RegisterConverter(Type converter);
+
+        public bool TryGetCommand(string commandName, out ICommand command);
     }
 }

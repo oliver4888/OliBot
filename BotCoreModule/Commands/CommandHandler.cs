@@ -12,13 +12,11 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using BotCoreModule.Commands.Models;
 using BotCoreModule.Commands.Converters;
-using BotCoreModule.Commands.Extensions;
 
 namespace BotCoreModule.Commands
 {
     public class CommandHandler : ICommandHandler
     {
-        // This will be moved to a db and configurable per server 
         public string CommandPrefix { get; private set; }
 
         readonly ILogger<CommandHandler> _logger;
@@ -157,6 +155,9 @@ namespace BotCoreModule.Commands
             }
         }
 
+        public bool TryGetCommand(string commandName, out ICommand command) =>
+            (command = Commands.FirstOrDefault(c => c.Triggers.Contains(commandName))) != null;
+
         private async Task OnMessageCreated(MessageCreateEventArgs e)
         {
             if (e.Author.IsBot) return;
@@ -178,7 +179,7 @@ namespace BotCoreModule.Commands
             else
                 return;
 
-            if (!_commands.TryGetCommand(aliasUsed, out ICommand command))
+            if (!TryGetCommand(aliasUsed, out ICommand command))
                 return;
 
             if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
