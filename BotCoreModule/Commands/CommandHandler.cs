@@ -98,7 +98,7 @@ namespace BotCoreModule.Commands
                     Activator.CreateInstance(converter) as IGenericConverter);
         }
 
-        private bool TryConvertParameter<T>(string value, CommandContext ctx, out object converted)
+        private bool TryConvertParameter<T>(string value, ICommandParameter parameter, CommandContext ctx, out object converted)
         {
             converted = null;
             Type type = typeof(T);
@@ -108,6 +108,11 @@ namespace BotCoreModule.Commands
                 if (EnumConverter.TryParse(type, value, out object parsedValue))
                 {
                     converted = parsedValue;
+                    return true;
+                }
+                else if (!parameter.Required)
+                {
+                    converted = parameter.ParameterInfo.DefaultValue;
                     return true;
                 }
                 else
@@ -123,6 +128,11 @@ namespace BotCoreModule.Commands
                     converted = parsedValue;
                     return true;
                 }
+                else if (!parameter.Required)
+                {
+                    converted = parameter.ParameterInfo.DefaultValue;
+                    return true;
+                }
                 else
                 {
                     _logger.LogWarning($"Unable to convert parameter to type {type.FullName}: {value}");
@@ -134,16 +144,16 @@ namespace BotCoreModule.Commands
             return false;
         }
 
-        private bool TryConvertParameter(string value, CommandContext ctx, out object converted, Type type)
+        private bool TryConvertParameter(string value, ICommandParameter parameter, CommandContext ctx, out object converted)
         {
             converted = null;
-            MethodInfo method = ConvertGeneric.MakeGenericMethod(type);
+            MethodInfo method = ConvertGeneric.MakeGenericMethod(parameter.Type);
             try
             {
-                object[] parameters = new object[] { value, ctx, null };
+                object[] parameters = new object[] { value, parameter, ctx, null };
                 if ((bool)method.Invoke(this, parameters))
                 {
-                    converted = parameters[2];
+                    converted = parameters[3];
                     return true;
                 }
                 return false;
@@ -266,7 +276,7 @@ namespace BotCoreModule.Commands
                 }
                 else
                 {
-                    if (TryConvertParameter(messageParts.Dequeue(), ctx, out object converted, param.Type))
+                    if (TryConvertParameter(messageParts.Dequeue(), param, ctx, out object converted))
                         parameters.Add(converted);
                     else
                     {
