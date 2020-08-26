@@ -27,9 +27,18 @@ namespace ModModule
 
             await ctx.Message.DeleteAsync();
 
-            IReadOnlyList<DiscordMessage> messages = await ctx.Channel.GetMessagesAsync(numMessages);
-            await ctx.Channel.DeleteMessagesAsync(messages);
-            DiscordMessage response = await ctx.Channel.SendMessageAsync($"Deleted {messages.Count} message{(messages.Count == 1 ? "" : "s")} :white_check_mark:");
+            DateTime twoWeeksAgo = DateTime.Now.AddDays(-14);
+            IEnumerable<DiscordMessage> messages = (await ctx.Channel.GetMessagesAsync(numMessages)).Where(message => message.CreationTimestamp > twoWeeksAgo);
+
+            DiscordMessage response;
+
+            if (messages.Any())
+            {
+                await ctx.Channel.DeleteMessagesAsync(messages);
+                response = await ctx.Channel.SendMessageAsync($"Deleted {messages.Count()} message{(messages.Count() == 1 ? "" : "s")} :white_check_mark:");
+            }
+            else
+                response = await ctx.Channel.SendMessageAsync("No messages could be deleted.");
 
             await DelayThenDelete(ctx, response);
         }
@@ -48,7 +57,8 @@ namespace ModModule
                 return;
             }
 
-            IReadOnlyList<DiscordMessage> discordMessages = await ctx.Channel.GetMessagesAsync(numMessages);
+            DateTime twoWeeksAgo = DateTime.Now.AddDays(-14);
+            IEnumerable<DiscordMessage> discordMessages = (await ctx.Channel.GetMessagesAsync(numMessages)).Where(message => message.CreationTimestamp > twoWeeksAgo);
             IList<DiscordMessage> messagesToDelete = new List<DiscordMessage>();
 
             char[] wordSplitters = new char[] { ' ', ',', '.', ':', '\t' };
@@ -57,13 +67,13 @@ namespace ModModule
             {
                 if (message.Attachments.Count == 0 && message.Embeds.Count == 0)
                 {
-                    string[] words = message.Content.Split(wordSplitters);
+                    IEnumerable<string> words = message.Content.Split(wordSplitters).Where(word => !string.IsNullOrWhiteSpace(word));
 
                     bool isOnlyMentions = true;
 
                     foreach (string word in words)
                     {
-                        if (string.IsNullOrWhiteSpace(word) || word == "@everyone" || word == "@here") break;
+                        if (word == "@everyone" || word == "@here") continue;
 
                         if (!Regex.Match(word, @"^<@[!&]?\d{18}>$").Success)
                         {
@@ -86,11 +96,10 @@ namespace ModModule
                 response = await ctx.Channel.SendMessageAsync($"Deleted {messagesToDelete.Count} message{(messagesToDelete.Count == 1 ? "" : "s")} :white_check_mark:");
             }
             else
-                response = await ctx.Channel.SendMessageAsync($"No mention only messages where found in the past {numMessages} messages!");
+                response = await ctx.Channel.SendMessageAsync($"No mention only messages were found in the past {numMessages} messages!");
 
             await DelayThenDelete(ctx, response);
         }
-
 
         [Command(disableDMs: true, groupName: "Moderation")]
         [Alias("cm", "check-mute")]
@@ -115,7 +124,7 @@ namespace ModModule
         [RequiredPermissions(Permissions.ManageRoles)]
         public async Task Mute(CommandContext ctx,
             [Description("The user to mute")] DiscordMember member,
-            [RemainingText] [Description("Reason for the mute")] string reason = "")
+            [RemainingText][Description("Reason for the mute")] string reason = "")
         {
             DiscordRole muted = await GetMutedRole(ctx.Guild);
             await member.GrantRoleAsync(muted, reason);
@@ -127,7 +136,7 @@ namespace ModModule
         [RequiredPermissions(Permissions.ManageRoles)]
         public async Task UnMute(CommandContext ctx,
             [Description("The user to unmute")] DiscordMember member,
-            [RemainingText] [Description("Reason for the unmute")] string reason = "")
+            [RemainingText][Description("Reason for the unmute")] string reason = "")
         {
             DiscordRole muted = await GetMutedRole(ctx.Guild);
             await member.RevokeRoleAsync(muted, reason);
@@ -139,7 +148,7 @@ namespace ModModule
         [RequiredPermissions(Permissions.KickMembers)]
         public async Task Kick(CommandContext ctx,
             [Description("User to kick")] DiscordMember member,
-            [RemainingText] [Description("Reason for the kick")] string reason = "")
+            [RemainingText][Description("Reason for the kick")] string reason = "")
         {
             try
             {
