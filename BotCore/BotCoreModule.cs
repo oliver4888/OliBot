@@ -1,10 +1,10 @@
 ﻿using System;
 using DSharpPlus;
 using System.Linq;
+using BotCore.Commands;
 using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
-using BotCore.Commands;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;

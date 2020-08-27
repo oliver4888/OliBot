@@ -8,10 +8,10 @@ using System.Reflection;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 using BotCore.Commands.Models;
+using System.Collections.Generic;
 using BotCore.Commands.Converters;
+using Microsoft.Extensions.Logging;
 
 namespace BotCore.Commands
 {
@@ -192,36 +192,16 @@ namespace BotCore.Commands
             if (!TryGetCommand(aliasUsed, out ICommand command))
                 return;
 
+            if (e.Channel.IsPrivate && command.DisableDMs)
+                return;
+
             if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
             {
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
                 return;
             }
 
-            string argumentString = string.Join(" ", messageParts.Skip(1));
-
-            if (e.Channel.IsPrivate)
-            {
-                if (!command.DisableDMs)
-                    await HandleCommandDMs(e, command, aliasUsed, argumentString);
-            }
-            else
-                await HandleCommand(e, command, aliasUsed, argumentString);
-
-        }
-
-        private async Task HandleCommandDMs(MessageCreateEventArgs e, ICommand command, string aliasUsed, string argumentString)
-        {
-            _logger.LogDebug($"Running command " +
-                $"{(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")} for {e.Author.Username}({e.Author.Id}) in DMs");
-
-            await InvokeCommand(command, new CommandContext(e, _botCoreModuleInstance, null, Permissions.None, aliasUsed, argumentString));
-        }
-
-        private async Task HandleCommand(MessageCreateEventArgs e, ICommand command, string aliasUsed, string argumentString)
-        {
-            DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
-            CommandContext ctx = new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member), aliasUsed, argumentString);
+            CommandContext ctx = await CreateCommandContext(e, aliasUsed, string.Join(" ", messageParts.Skip(1)));
 
             if (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator))
             {
@@ -238,13 +218,24 @@ namespace BotCore.Commands
                 return;
             }
 
-            _logger.LogDebug($"Running command {(aliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{aliasUsed}`)")}" +
-                $" for {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
+            (bool convertedParameters, IEnumerable<object> parameters) = await TryConvertParameters(command, ctx);
 
-            await InvokeCommand(command, ctx);
+            if (!convertedParameters)
+                return;
+
+            await InvokeCommand(command, ctx, parameters.ToArray());
         }
 
-        private async Task InvokeCommand(ICommand command, CommandContext ctx)
+        private async Task<CommandContext> CreateCommandContext(MessageCreateEventArgs e, string aliasUsed, string argumentString)
+        {
+            if (e.Channel.IsPrivate)
+                return new CommandContext(e, _botCoreModuleInstance, null, Permissions.None, aliasUsed, argumentString);
+
+            DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
+            return new CommandContext(e, _botCoreModuleInstance, member, e.Channel.PermissionsFor(member), aliasUsed, argumentString);
+        }
+
+        private async Task<(bool, IEnumerable<object>)> TryConvertParameters(ICommand command, CommandContext ctx)
         {
             IList<object> parameters = new List<object>();
 
@@ -259,7 +250,7 @@ namespace BotCore.Commands
                     if (param.Required)
                     {
                         await ctx.Channel.SendMessageAsync($"{ctx.Author.Mention}, missing parameter `{param.ParameterInfo.Name}`!");
-                        return;
+                        return (false, null);
                     }
                     else
                         parameters.Add(param.ParameterInfo.DefaultValue);
@@ -281,17 +272,30 @@ namespace BotCore.Commands
                     else
                     {
                         await ctx.Channel.SendMessageAsync($"{ctx.Author.Mention}, unable to convert parameter `{param.ParameterInfo.Name}` to `{param.Type.Name}`!");
-                        return;
+                        return (false, null);
                     }
                 }
             }
 
+            return (true, parameters);
+        }
+
+        private async Task InvokeCommand(ICommand command, CommandContext ctx, object[] parameters)
+        {
+            string cmdLogPart = $"Running command " +
+                $"{(ctx.AliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{ctx.AliasUsed}`)")} for {ctx.Author.Username}({ctx.Author.Id}) in";
+
+            if (ctx.IsDMs)
+                _logger.LogDebug($"{cmdLogPart} DMs");
+            else
+                _logger.LogDebug($"{cmdLogPart} channel: {ctx.Channel.Name}/{ctx.Channel.Id}, guild: {ctx.Guild.Name}/{ctx.Guild.Id}");
+
             try
             {
                 if (command.CommandMethod.ReturnType == typeof(Task))
-                    await (command.MethodDelegate.DynamicInvoke(parameters.ToArray()) as Task);
+                    await (command.MethodDelegate.DynamicInvoke(parameters) as Task);
                 else
-                    command.MethodDelegate.DynamicInvoke(parameters.ToArray());
+                    command.MethodDelegate.DynamicInvoke(parameters);
             }
             catch (Exception ex)
             {

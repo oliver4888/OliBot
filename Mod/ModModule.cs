@@ -1,9 +1,9 @@
-﻿using Common.Attributes;
+﻿using DSharpPlus;
+using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using DSharpPlus;
 
 namespace Mod
 {
