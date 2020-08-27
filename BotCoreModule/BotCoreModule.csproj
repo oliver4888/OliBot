@@ -10,7 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj">
+      <IncludeAssets>compile</IncludeAssets>
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

@@ -54,7 +54,8 @@ namespace BotRunner
             if (PossibleDependencies == null)
                 return null;
 
-            string dep = PossibleDependencies.FirstOrDefault(item => item == Path.Combine(_moduleFolder, args.Name.Remove(args.Name.IndexOf(',')) + ".dll"));
+            string dep = PossibleDependencies.FirstOrDefault(item =>
+                item.ToLowerInvariant() == Path.Combine(_moduleFolder, args.Name.Remove(args.Name.IndexOf(',')) + ".dll").ToLowerInvariant());
             if (dep == null)
                 return null;
             else

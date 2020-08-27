@@ -1,16 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SteamWebAPI2" Version="4.2.5" />
-    <PackageReference Include="System.Runtime.Caching" Version="4.7.0" />
+    <PackageReference Include="SteamWebAPI2" Version="4.2.5"/>
+    <PackageReference Include="System.Runtime.Caching" Version="4.7.0"/>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\Common\Common.csproj">
+      <IncludeAssets>compile</IncludeAssets>
+      <Private>false</Private>
+    </ProjectReference>
   </ItemGroup>
-
 </Project>
