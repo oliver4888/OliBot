@@ -7,15 +7,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotRunner", "BotRunner\BotR
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{E589419D-FC35-4B47-95DC-76F4DAE86821}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCoreModule", "BotCoreModule\BotCoreModule.csproj", "{1E90E35E-782F-4534-9A4F-E66D0ECBE323}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCore", "BotCore\BotCore.csproj", "{1E90E35E-782F-4534-9A4F-E66D0ECBE323}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamHelperModule", "SteamHelperModule\SteamHelperModule.csproj", "{6B7A65BB-3ED4-45CF-A448-A129C28B746B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SteamHelper", "SteamHelper\SteamHelper.csproj", "{6B7A65BB-3ED4-45CF-A448-A129C28B746B}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModModule", "ModModule\ModModule.csproj", "{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mod", "Mod\Mod.csproj", "{6D7EE184-5C01-4AF9-ACD5-A57914C0EB66}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StatusModule", "StatusModule\StatusModule.csproj", "{590759CF-A9B6-4440-9973-E453DA1EE99C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Status", "Status\Status.csproj", "{590759CF-A9B6-4440-9973-E453DA1EE99C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotCoreModule.Tests", "BotCoreModule.Tests\BotCoreModule.Tests.csproj", "{2D784C42-C332-49F1-8AE3-2804EE9F9603}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCore.Tests", "BotCore.Tests\BotCore.Tests.csproj", "{2D784C42-C332-49F1-8AE3-2804EE9F9603}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
