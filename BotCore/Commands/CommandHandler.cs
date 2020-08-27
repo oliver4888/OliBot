@@ -239,7 +239,7 @@ namespace BotCore.Commands
         {
             IList<object> parameters = new List<object>();
 
-            Queue<string> messageParts = new Queue<string>(ctx.ArgumentString.Split(" "));
+            Queue<string> messageParts = new Queue<string>(ctx.ArgumentString.Split(" ").Where(item => !string.IsNullOrWhiteSpace(item)));
 
             foreach (ICommandParameter param in command.Parameters)
             {
