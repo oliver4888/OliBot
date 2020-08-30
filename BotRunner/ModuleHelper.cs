@@ -54,12 +54,11 @@ namespace BotRunner
             if (PossibleDependencies == null)
                 return null;
 
-            string dep = PossibleDependencies.FirstOrDefault(item =>
-                item.ToLowerInvariant() == Path.Combine(_moduleFolder, args.Name.Remove(args.Name.IndexOf(',')) + ".dll").ToLowerInvariant());
-            if (dep == null)
-                return null;
-            else
-                return Assembly.LoadFile(dep);
+            string resolveName = (args.Name.Remove(args.Name.IndexOf(',')) + ".dll").ToLowerInvariant();
+
+            string dep = PossibleDependencies.FirstOrDefault(item => Path.GetFileName(item).ToLowerInvariant() == resolveName);
+
+            return dep == null ? null : Assembly.LoadFile(dep);
         }
 
         static IEnumerable<Assembly> LoadAssemblies(IEnumerable<string> files)
@@ -67,6 +66,5 @@ namespace BotRunner
             foreach (string file in files)
                 yield return Assembly.LoadFile(file);
         }
-
     }
 }
