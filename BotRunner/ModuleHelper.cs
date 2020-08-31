@@ -10,14 +10,15 @@ namespace BotRunner
 {
     public static class ModuleHelper
     {
-        public static IEnumerable<Assembly> ModuleAssemblies { get; private set; } = new List<Assembly>();
-        public static IEnumerable<Type> DependencyInjectedTypes { get; private set; } = new List<Type>();
+        internal static IEnumerable<Assembly> ModuleAssemblies { get; private set; } = new List<Assembly>();
+        internal static IEnumerable<Type> DependencyInjectedTypes { get; private set; } = new List<Type>();
+        internal static IEnumerable<string> PossibleConfigFiles { get; private set; } = new List<string>();
 
         static IEnumerable<string> PossibleDependencies;
 
         static string _moduleFolder = Path.Combine(Directory.GetCurrentDirectory(), "Modules");
 
-        public static void LoadModules(IConfiguration configuration)
+        internal static void LoadModules(IConfiguration configuration)
         {
             string depFolder = configuration[CommandLineFlags.DebugModuleFolder];
 
@@ -42,6 +43,14 @@ namespace BotRunner
                 dlls = dlls.Concat(loadModules.Split(",")).Distinct();
 
             ModuleAssemblies = LoadAssemblies(dlls.Where(file => file.EndsWith("Module.dll")));
+
+            string environmentName = EnvironmentHelper.GetEnvironmentName();
+
+            PossibleConfigFiles = ModuleAssemblies.SelectMany(item =>
+            {
+                string configBaseName = Path.Combine(Path.GetDirectoryName(item.Location), $"appsettings.{Path.GetFileNameWithoutExtension(item.Location)}.");
+                return new string[] { configBaseName + "json", configBaseName + environmentName + ".json" };
+            });
 
             DependencyInjectedTypes = ModuleAssemblies
                 .Concat(new List<Assembly> { Assembly.GetExecutingAssembly() })
