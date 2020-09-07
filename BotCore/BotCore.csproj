@@ -17,4 +17,13 @@
     </ProjectReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="appsettings.BotCoreModule.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.BotCoreModule.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

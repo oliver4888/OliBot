@@ -17,4 +17,13 @@
       <Private>false</Private>
     </ProjectReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.SteamHelperModule.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.SteamHelperModule.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
