@@ -32,7 +32,8 @@ namespace BotCore
             DiscordClient = new DiscordClient(new DiscordConfiguration
             {
                 Token = _config["Token"],
-                TokenType = TokenType.Bot
+                TokenType = TokenType.Bot,
+                LoggerFactory = loggerFactory
             });
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
