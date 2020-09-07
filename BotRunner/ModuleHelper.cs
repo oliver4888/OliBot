@@ -52,6 +52,10 @@ namespace BotRunner
                 return new string[] { configBaseName + "json", configBaseName + environmentName + ".json" };
             });
 
+            string addConfigs = configuration[CommandLineFlags.DebugAddConfigFiles];
+            if (addConfigs != null)
+                PossibleConfigFiles = PossibleConfigFiles.Concat(addConfigs.Split(",")).Distinct();
+
             DependencyInjectedTypes = ModuleAssemblies
                 .Concat(new List<Assembly> { Assembly.GetExecutingAssembly() })
                 .SelectMany(assembly => assembly.GetTypes())
