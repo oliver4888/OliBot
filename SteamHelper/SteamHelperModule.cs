@@ -56,7 +56,7 @@ namespace SteamHelper
 
             PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(itemId);
 
-            if (response.Result == 9) // Friends Only / Private
+            if (response == null || response.Result == 9) // Friends Only / Private
             {
                 await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":x:"));
                 return;
