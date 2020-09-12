@@ -62,8 +62,6 @@ namespace BotCore
             await DiscordClient.ConnectAsync(status != null ? new DiscordActivity(status) : null);
 
             StartTime = DateTime.Now;
-
-            await Task.Delay(-1);
         }
     }
 }
