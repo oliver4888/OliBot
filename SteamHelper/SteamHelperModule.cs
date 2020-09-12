@@ -24,7 +24,7 @@ namespace SteamHelper
         const string SteamClientLinkAffix = "steam://url/CommunityFilePage/";
         const string SteamWebLinkAffix = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
 
-        const string _regexString = @"(http(s)?:\/\/)?steam(community\.com\/sharedfiles\/filedetails\/\?id=|:\/\/url\/CommunityFilePage\/)(\d{9,10})";
+        const string _regexString = @"(http(s)?:\/\/)?steam(community\.com\/(sharedfiles|workshop)\/filedetails\/\?id=|:\/\/url\/CommunityFilePage\/)(\d{9,10})";
         readonly Regex _steamRegex = new Regex(_regexString, RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         readonly SteamWebApiHelper SteamWebApiHelper;
