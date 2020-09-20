@@ -68,7 +68,8 @@ namespace BotRunner
 
                 foreach (Type type in ModuleHelper.DependencyInjectedTypes)
                 {
-                    switch (type.GetCustomAttribute<DependencyInjectedAttribute>().Type)
+                    DependencyInjectedAttribute depAttr = type.GetCustomAttribute<DependencyInjectedAttribute>();
+                    switch (depAttr.Type)
                     {
                         case DIType.HostedService:
                             addHostedServiceMethod.MakeGenericMethod(type).Invoke(services, new object[] { services });
@@ -80,11 +81,10 @@ namespace BotRunner
                             services.AddScoped(type);
                             continue;
                         case DIType.Singleton:
-                            Type implements = type.GetCustomAttribute<ModuleAttribute>()?.Implements;
-                            if (implements == null)
+                            if (depAttr.Implements == null)
                                 services.AddSingleton(type);
                             else
-                                services.AddSingleton(implements, type);
+                                services.AddSingleton(depAttr.Implements, type);
                             continue;
                     }
                 }

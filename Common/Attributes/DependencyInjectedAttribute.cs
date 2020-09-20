@@ -6,7 +6,8 @@ namespace Common.Attributes
     public class DependencyInjectedAttribute : Attribute
     {
         public readonly DIType Type;
+        public readonly Type Implements;
 
-        public DependencyInjectedAttribute(DIType dIType) => Type = dIType;
+        public DependencyInjectedAttribute(DIType dIType, Type implements = null) => (Type, Implements) = (dIType, implements);
     }
 }
