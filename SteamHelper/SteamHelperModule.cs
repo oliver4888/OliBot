@@ -3,6 +3,7 @@ using System.Linq;
 using Steam.Models;
 using Common.Attributes;
 using Common.Interfaces;
+using SteamHelper.Models;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Exceptions;
@@ -21,13 +22,16 @@ namespace SteamHelper
         readonly IConfigurationSection _config;
         readonly IBotCoreModule _botCoreModule;
 
-        const string SteamClientLinkAffix = "steam://url/CommunityFilePage/";
-        const string SteamWebLinkAffix = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
+        const string ClientLinkPrefix_CommunityFilePage = "steam://url/CommunityFilePage/";
+        const string ClientLinkPrefix_StorePage = "steam://url/StoreAppPage/";
+        const string WebLinkPrefix_FileDetails = "https://steamcommunity.com/sharedfiles/filedetails/?id=";
+        const string WebLinkPrefix_StorePage = "https://store.steampowered.com/app/";
 
-        const string _regexString = @"(http(s)?:\/\/)?steam(community\.com\/(sharedfiles|workshop)\/filedetails\/\?id=|:\/\/url\/CommunityFilePage\/)(\d{9,10})";
+        const string _regexString =
+            @"(?:(?:https?|steam):\/\/)?(?:url|store.steampowered.com|steamcommunity.com)\/(StoreAppPage|app|sharedfiles|CommunityFilePage|workshop)\/(?:filedetails\/\?id=)?(\d+)\/?(?:[^ \/\n]+\/?)?";
         readonly Regex _steamRegex = new Regex(_regexString, RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        readonly SteamWebApiHelper SteamWebApiHelper;
+        public static SteamWebApiHelper SteamWebApiHelper;
 
         public SteamHelperModule(ILoggerFactory loggerFactory, IConfiguration configuration, IBotCoreModule botCoreModule)
         {
@@ -45,28 +49,43 @@ namespace SteamHelper
         {
             if (e.Author.IsBot || string.IsNullOrWhiteSpace(e.Message.Content)) return;
 
-            MatchCollection matches = _steamRegex.Matches(e.Message.Content);
+            MatchCollection matches = _steamRegex.Matches(e.Message.Content.ToLowerInvariant());
 
             if (!matches.Any()) return;
 
-            ulong itemId = ulong.Parse(matches[0].Groups.Last().Value);
+            Match match = matches.First();
+            (string page, string stringId) = (match.Groups[1].Value, match.Groups[2].Value);
 
-            _logger.LogDebug($"Generating Steam embed wsID:{itemId} for {e.Author.Username}({e.Author.Id}) in " +
+            (bool success, DiscordEmbed embed) embedResult = (false, null);
+
+            _logger.LogDebug($"Generating Steam embed {page}:{stringId} for {e.Author.Username}({e.Author.Id}) in " +
                 $"{(e.Channel.IsPrivate ? "DMs" : $"channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}")}");
 
-            PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(itemId);
+            switch (page)
+            {
+                case "storeapppage":
+                case "app":
+                    embedResult = await TryGenStoreEmbed(await CreateEmptyEmbedForEvent(e), uint.Parse(stringId));
+                    break;
+                case "sharedfiles":
+                case "workshop":
+                case "communityfilepage":
+                    embedResult = await TryGenWorkshopEmbed(await CreateEmptyEmbedForEvent(e), ulong.Parse(stringId));
+                    break;
+            }
 
-            if (response == null || response.Result == 9) // Friends Only / Private
+            if (!embedResult.success)
             {
                 await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":x:"));
                 return;
             }
 
-            PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
+            await e.Channel.SendMessageAsync(embed: embedResult.embed);
 
-            await e.Channel.SendMessageAsync(embed: BuildEmbedForItem(await CreateEmptyEmbedForEvent(e), response, userResponse));
+            if (e.Channel.IsPrivate)
+                return;
 
-            if (!e.Channel.IsPrivate && matches.Count() == 1 && e.Message.Content.Trim() == matches[0].Value)
+            if (matches.Count() == 1 && e.Message.Content.Trim().ToLowerInvariant() == match.Value)
             {
                 try
                 {
@@ -85,6 +104,65 @@ namespace SteamHelper
                 await e.Message.ModifyEmbedSuppressionAsync(true);
         }
 
+        public async Task<(bool, DiscordEmbed)> TryGenStoreEmbed(DiscordEmbedBuilder baseEmbed, uint id)
+        {
+            SteamAppDetails data = await SteamWebApiHelper.GetStoreDetails(id);
+
+            baseEmbed
+                .WithTitle(data.Name)
+                .WithUrl(WebLinkPrefix_StorePage + data.SteamAppId)
+                .WithThumbnail(data.HeaderImage)
+                .WithDescription(data.ShortDescription.Length > 250 ? data.ShortDescription.Substring(0, 250).Trim() + "..." : data.ShortDescription);
+
+            if (data.ReleaseDate.ComingSoon)
+                baseEmbed.AddField("Release Date", data.ReleaseDate.Date, true);
+
+            if (data.PriceOverview != null)
+                baseEmbed.AddField("Price", data.IsFree ? "Free" : data.PriceOverview.FinalFormatted, true);
+
+            if (data.Recommendations != null)
+                baseEmbed.AddField("Recommendatons", data.Recommendations.Total.ToString(), true);
+
+            if (data.Metacritic != null)
+                baseEmbed.AddField("Metacritic", $"[{data.Metacritic.Score}]({data.Metacritic.Url})", true);
+
+            baseEmbed.AddField("Steam Client Link", ClientLinkPrefix_StorePage + data.SteamAppId, true);
+
+            return (true, baseEmbed.Build());
+        }
+
+        public async Task<(bool, DiscordEmbed)> TryGenWorkshopEmbed(DiscordEmbedBuilder baseEmbed, ulong id)
+        {
+            PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(id);
+
+            if (response == null || response.Result == 9) // Friends Only / Private
+                return (false, null);
+
+            PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
+
+            string description = string.Join(" ", Regex.Replace(response.Description, @"\[[^]]+\]", "").Split(Environment.NewLine));
+
+            if (response.PreviewUrl != null)
+                baseEmbed.WithThumbnail(response.PreviewUrl);
+
+            if (!string.IsNullOrWhiteSpace(description))
+                baseEmbed.WithDescription(description.Length > 200 ? description.Substring(0, 200).Trim() + "..." : description);
+
+            baseEmbed
+                .WithTitle($"{response.Title} by {userResponse.Nickname}")
+                .WithUrl(WebLinkPrefix_FileDetails + response.PublishedFileId.ToString())
+                .AddField("Last Updated", response.TimeUpdated.ToString(), true)
+                .AddField("Views", string.Format("{0:n0}", response.Views), true);
+
+            if (response.Tags.Any())
+                baseEmbed.AddField("Tags", string.Join(", ", response.Tags), true);
+
+            baseEmbed
+                .AddField("Steam Client Link", ClientLinkPrefix_CommunityFilePage + response.PublishedFileId.ToString(), true);
+
+            return (true, baseEmbed.Build());
+        }
+
         public async Task<DiscordEmbedBuilder> CreateEmptyEmbedForEvent(MessageCreateEventArgs e)
         {
             if (e.Channel.IsPrivate)
@@ -95,30 +173,6 @@ namespace SteamHelper
 
                 return new DiscordEmbedBuilder().WithTimestamp(e.Message.Id).WithColor(member.Color).WithFooter($"{member.Username}", member.AvatarUrl);
             }
-        }
-
-        private DiscordEmbed BuildEmbedForItem(DiscordEmbedBuilder builder, PublishedFileDetailsModel model, PlayerSummaryModel userModel)
-        {
-            string description = string.Join(" ", Regex.Replace(model.Description, @"\[[^]]+\]", "").Split(Environment.NewLine));
-
-            if (model.PreviewUrl != null)
-                builder.WithThumbnail(model.PreviewUrl);
-
-            if (!string.IsNullOrWhiteSpace(description))
-                builder.WithDescription(description.Length > 200 ? description.Substring(0, 200).Trim() + "..." : description);
-
-            builder
-                .WithTitle($"{model.Title} by {userModel.Nickname}")
-                .WithUrl(SteamWebLinkAffix + model.PublishedFileId.ToString())
-                .AddField("Last Updated", model.TimeUpdated.ToString(), true)
-                .AddField("Views", string.Format("{0:n0}", model.Views), true);
-
-            if (model.Tags.Any())
-                builder.AddField("Tags", string.Join(", ", model.Tags), true);
-
-            return builder
-                .AddField("Steam Client Link", SteamClientLinkAffix + model.PublishedFileId.ToString())
-                .Build();
         }
     }
 }

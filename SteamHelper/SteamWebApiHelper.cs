@@ -1,5 +1,6 @@
 ﻿using Steam.Models;
 using System.Net.Http;
+using SteamHelper.Models;
 using System.Threading.Tasks;
 using SteamWebAPI2.Utilities;
 using SteamWebAPI2.Interfaces;
@@ -16,10 +17,12 @@ namespace SteamHelper
 
         const string PublishedFileCacheKey = "PublishedFileCache";
         const string PlayerSummaryCacheKey = "PlayerSummaryCache";
+        const string StoreAppDetailsCacheKey = "StoreAppDetailsCache";
 
         readonly SteamWebInterfaceFactory SteamWebInterfaceFactory;
         readonly SteamRemoteStorage SteamRemoteStorage;
         readonly SteamUser SteamUser;
+        readonly SteamStore SteamStore;
 
         static readonly IDictionary<string, SteamItemCache> _caches = new Dictionary<string, SteamItemCache>();
         public static IReadOnlyDictionary<string, SteamItemCache> Caches => _caches as IReadOnlyDictionary<string, SteamItemCache>;
@@ -48,9 +51,19 @@ namespace SteamHelper
                         slidingExpirationHours,
                         fileCachePath));
 
+            if (!_caches.ContainsKey(StoreAppDetailsCacheKey))
+                _caches.Add(
+                    StoreAppDetailsCacheKey,
+                    SteamItemCache.Create<SteamAppDetails>(
+                        loggerFactory.CreateLogger<SteamItemCache>(),
+                        StoreAppDetailsCacheKey,
+                        slidingExpirationHours,
+                        fileCachePath));
+
             SteamWebInterfaceFactory = new SteamWebInterfaceFactory(token);
             SteamRemoteStorage = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamRemoteStorage>(_client);
             SteamUser = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamUser>(_client);
+            SteamStore = SteamWebInterfaceFactory.CreateSteamStoreInterface(_client);
         }
 
         public async Task<PublishedFileDetailsModel> GetPublishedFileDetails(ulong id) =>
@@ -58,5 +71,8 @@ namespace SteamHelper
 
         public async Task<PlayerSummaryModel> GetPlayerSummary(ulong id) =>
                 await _caches[PlayerSummaryCacheKey].AddOrGetExisting(id.ToString(), async () => (await SteamUser.GetPlayerSummaryAsync(id))?.Data);
+
+        public async Task<SteamAppDetails> GetStoreDetails(uint id) =>
+            await _caches[StoreAppDetailsCacheKey].AddOrGetExisting(id.ToString(), async () => (SteamAppDetails)await SteamStore.GetStoreAppDetailsAsync(id));
     }
 }
