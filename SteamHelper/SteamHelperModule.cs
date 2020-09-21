@@ -19,7 +19,6 @@ namespace SteamHelper
     public class SteamHelperModule
     {
         readonly ILogger<SteamHelperModule> _logger;
-        readonly IConfigurationSection _config;
         readonly IBotCoreModule _botCoreModule;
 
         const string ClientLinkPrefix_CommunityFilePage = "steam://url/CommunityFilePage/";
@@ -31,18 +30,17 @@ namespace SteamHelper
             @"(?:(?:https?|steam):\/\/)?(?:url|store.steampowered.com|steamcommunity.com)\/(StoreAppPage|app|sharedfiles|CommunityFilePage|workshop)\/(?:filedetails\/\?id=)?(\d+)\/?(?:[^ \/\n]+\/?)?";
         readonly Regex _steamRegex = new Regex(_regexString, RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
-        public static SteamWebApiHelper SteamWebApiHelper;
+        readonly ISteamWebApiHelper _steamWebApiHelper;
 
-        public SteamHelperModule(ILoggerFactory loggerFactory, IConfiguration configuration, IBotCoreModule botCoreModule)
+        public SteamHelperModule(ILoggerFactory loggerFactory, IConfiguration configuration, IBotCoreModule botCoreModule, ISteamWebApiHelper steamWebApiHelper)
         {
             _logger = loggerFactory.CreateLogger<SteamHelperModule>();
-            _config = configuration.GetSection("SteamHelper");
             _botCoreModule = botCoreModule;
 
             _botCoreModule.CommandHandler.RegisterCommands<SteamCommands>();
             _botCoreModule.DiscordClient.MessageCreated += OnMessageCreated;
 
-            SteamWebApiHelper = new SteamWebApiHelper(loggerFactory, _config["Token"], int.Parse(_config["SlidingExpirationHours"]), _config["FileCachePath"]);
+            _steamWebApiHelper = steamWebApiHelper;
         }
 
         private async Task OnMessageCreated(MessageCreateEventArgs e)
@@ -106,7 +104,7 @@ namespace SteamHelper
 
         public async Task<(bool, DiscordEmbed)> TryGenStoreEmbed(DiscordEmbedBuilder baseEmbed, uint id)
         {
-            SteamAppDetails data = await SteamWebApiHelper.GetStoreDetails(id);
+            SteamAppDetails data = await _steamWebApiHelper.GetStoreDetails(id);
 
             baseEmbed
                 .WithTitle(data.Name)
@@ -133,12 +131,12 @@ namespace SteamHelper
 
         public async Task<(bool, DiscordEmbed)> TryGenWorkshopEmbed(DiscordEmbedBuilder baseEmbed, ulong id)
         {
-            PublishedFileDetailsModel response = await SteamWebApiHelper.GetPublishedFileDetails(id);
+            PublishedFileDetailsModel response = await _steamWebApiHelper.GetPublishedFileDetails(id);
 
             if (response == null || response.Result == 9) // Friends Only / Private
                 return (false, null);
 
-            PlayerSummaryModel userResponse = await SteamWebApiHelper.GetPlayerSummary(response.Creator);
+            PlayerSummaryModel userResponse = await _steamWebApiHelper.GetPlayerSummary(response.Creator);
 
             string description = string.Join(" ", Regex.Replace(response.Description, @"\[[^]]+\]", "").Split(Environment.NewLine));
 

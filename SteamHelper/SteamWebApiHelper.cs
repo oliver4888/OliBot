@@ -1,5 +1,7 @@
-﻿using Steam.Models;
+﻿using Common;
+using Steam.Models;
 using System.Net.Http;
+using Common.Attributes;
 using SteamHelper.Models;
 using System.Threading.Tasks;
 using SteamWebAPI2.Utilities;
@@ -7,10 +9,21 @@ using SteamWebAPI2.Interfaces;
 using System.Collections.Generic;
 using Steam.Models.SteamCommunity;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace SteamHelper
 {
-    public class SteamWebApiHelper
+    public interface ISteamWebApiHelper
+    {
+        public static IReadOnlyDictionary<string, SteamItemCache> Caches;
+
+        public Task<PublishedFileDetailsModel> GetPublishedFileDetails(ulong id);
+        public Task<PlayerSummaryModel> GetPlayerSummary(ulong id);
+        public Task<SteamAppDetails> GetStoreDetails(uint id);
+    }
+
+    [DependencyInjected(DIType.Singleton, typeof(ISteamWebApiHelper))]
+    public class SteamWebApiHelper : ISteamWebApiHelper
     {
         readonly ILogger<SteamWebApiHelper> _logger;
         readonly HttpClient _client;
@@ -27,10 +40,15 @@ namespace SteamHelper
         static readonly IDictionary<string, SteamItemCache> _caches = new Dictionary<string, SteamItemCache>();
         public static IReadOnlyDictionary<string, SteamItemCache> Caches => _caches as IReadOnlyDictionary<string, SteamItemCache>;
 
-        public SteamWebApiHelper(ILoggerFactory loggerFactory, string token, int slidingExpirationHours, string fileCachePath)
+        public SteamWebApiHelper(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             _logger = loggerFactory.CreateLogger<SteamWebApiHelper>();
             _client = new HttpClient();
+
+            IConfigurationSection config = configuration.GetSection("SteamHelper");
+
+            int slidingExpirationHours = int.Parse(config["SlidingExpirationHours"]);
+            string fileCachePath = config["FileCachePath"];
 
             // Caches of the same endpoint should be shared between instances
             if (!_caches.ContainsKey(PublishedFileCacheKey))
@@ -60,7 +78,7 @@ namespace SteamHelper
                         slidingExpirationHours,
                         fileCachePath));
 
-            SteamWebInterfaceFactory = new SteamWebInterfaceFactory(token);
+            SteamWebInterfaceFactory = new SteamWebInterfaceFactory(config["Token"]);
             SteamRemoteStorage = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamRemoteStorage>(_client);
             SteamUser = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamUser>(_client);
             SteamStore = SteamWebInterfaceFactory.CreateSteamStoreInterface(_client);
