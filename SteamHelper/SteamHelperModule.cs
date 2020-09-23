@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using Steam.Models.SteamCommunity;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
 
 namespace SteamHelper
 {
@@ -32,7 +31,7 @@ namespace SteamHelper
 
         readonly ISteamWebApiHelper _steamWebApiHelper;
 
-        public SteamHelperModule(ILoggerFactory loggerFactory, IConfiguration configuration, IBotCoreModule botCoreModule, ISteamWebApiHelper steamWebApiHelper)
+        public SteamHelperModule(ILoggerFactory loggerFactory, IBotCoreModule botCoreModule, ISteamWebApiHelper steamWebApiHelper)
         {
             _logger = loggerFactory.CreateLogger<SteamHelperModule>();
             _botCoreModule = botCoreModule;
@@ -56,9 +55,6 @@ namespace SteamHelper
 
             (bool success, DiscordEmbed embed) embedResult = (false, null);
 
-            _logger.LogDebug($"Generating Steam embed {page}:{stringId} for {e.Author.Username}({e.Author.Id}) in " +
-                $"{(e.Channel.IsPrivate ? "DMs" : $"channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}")}");
-
             switch (page)
             {
                 case "storeapppage":
@@ -74,9 +70,12 @@ namespace SteamHelper
 
             if (!embedResult.success)
             {
-                await e.Message.CreateReactionAsync(DiscordEmoji.FromName(e.Client, ":x:"));
+                _logger.LogDebug($"Unable to generate embed for {page}/{stringId}");
                 return;
             }
+
+            _logger.LogDebug($"Generating Steam embed {page}:{stringId} for {e.Author.Username}({e.Author.Id}) in " +
+                $"{(e.Channel.IsPrivate ? "DMs" : $"channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}")}");
 
             await e.Channel.SendMessageAsync(embed: embedResult.embed);
 

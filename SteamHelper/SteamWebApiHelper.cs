@@ -85,7 +85,10 @@ namespace SteamHelper
         }
 
         public async Task<PublishedFileDetailsModel> GetPublishedFileDetails(ulong id) =>
-            await _caches[PublishedFileCacheKey].AddOrGetExisting(id.ToString(), async () => (await SteamRemoteStorage.GetPublishedFileDetailsAsync(id))?.Data);
+            await _caches[PublishedFileCacheKey].AddOrGetExisting(
+                id.ToString(),
+                async () => (await SteamRemoteStorage.GetPublishedFileDetailsAsync(id))?.Data,
+                data => data != null && data.Result != 9 && data.Visibility == PublishedFileVisibility.Public);
 
         public async Task<PlayerSummaryModel> GetPlayerSummary(ulong id) =>
                 await _caches[PlayerSummaryCacheKey].AddOrGetExisting(id.ToString(), async () => (await SteamUser.GetPlayerSummaryAsync(id))?.Data);

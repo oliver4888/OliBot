@@ -66,7 +66,7 @@ namespace SteamHelper
         public static SteamItemCache Create<T>(ILogger<SteamItemCache> logger, string cacheName, int slidingExpirationHours, string fileCachePath) =>
             new SteamItemCache(logger, cacheName, slidingExpirationHours, fileCachePath, typeof(T));
 
-        public async Task<T> AddOrGetExisting<T>(string key, Func<Task<T>> valueFactory)
+        public async Task<T> AddOrGetExisting<T>(string key, Func<Task<T>> valueFactory, Func<T, bool> shouldCachePredicate = null)
         {
             if (_cache.Contains(key))
             {
@@ -82,6 +82,12 @@ namespace SteamHelper
 
                     if (data == null)
                         return default;
+
+                    if (shouldCachePredicate != null && !shouldCachePredicate(data))
+                    {
+                        _logger.LogDebug($"Not caching {_cache.Name}/{key}");
+                        return data;
+                    }
 
                     _cache.Add(key, data, _cachePolicy);
 
