@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Status", "Status\Status.csp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BotCore.Tests", "BotCore.Tests\BotCore.Tests.csproj", "{2D784C42-C332-49F1-8AE3-2804EE9F9603}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioPlayer", "AudioPlayer\AudioPlayer.csproj", "{3B72BFE3-5716-4D5F-883A-2D013D8F36B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{2D784C42-C332-49F1-8AE3-2804EE9F9603}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D784C42-C332-49F1-8AE3-2804EE9F9603}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D784C42-C332-49F1-8AE3-2804EE9F9603}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B72BFE3-5716-4D5F-883A-2D013D8F36B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B72BFE3-5716-4D5F-883A-2D013D8F36B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B72BFE3-5716-4D5F-883A-2D013D8F36B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B72BFE3-5716-4D5F-883A-2D013D8F36B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
