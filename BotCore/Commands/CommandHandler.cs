@@ -33,7 +33,16 @@ namespace BotCore.Commands
         {
             _logger = logger;
             _botCoreModuleInstance = botCoreModuleInstance;
-            _botCoreModuleInstance.DiscordClient.MessageCreated += OnMessageCreated;
+            _botCoreModuleInstance.DiscordClient.MessageCreated += (e) =>
+            {
+                Task.Run(async () =>
+                {
+                    await OnMessageCreated(e);
+                });
+
+                return Task.CompletedTask;
+            };
+
             CommandPrefix = commandPrefix;
 
             // Auto register default converters
