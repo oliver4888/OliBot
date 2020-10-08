@@ -5,6 +5,7 @@
         HostedService,
         Transient,
         Scoped,
-        Singleton
+        Singleton,
+        Options
     }
 }

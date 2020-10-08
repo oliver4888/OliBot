@@ -15,6 +15,17 @@ namespace BotRunner
 {
     static class Program
     {
+        static readonly MethodInfo _addHostedService =
+            typeof(ServiceCollectionHostedServiceExtensions).GetMethods().Single(mi =>
+                mi.Name == nameof(ServiceCollectionHostedServiceExtensions.AddHostedService)
+                && mi.GetParameters().Length == 1);
+
+        static readonly MethodInfo _configureOptions =
+            typeof(OptionsConfigurationServiceCollectionExtensions).GetMethods().Single(mi =>
+                mi.Name == nameof(OptionsConfigurationServiceCollectionExtensions.Configure)
+                && mi.GetParameters().Length == 2
+                && mi.GetParameters()[1].ParameterType == typeof(IConfiguration));
+
         static async Task Main(string[] args)
         {
             IConfiguration cmdLineConfig = new ConfigurationBuilder()
@@ -60,19 +71,13 @@ namespace BotRunner
                     .AddSingleton(configuration)
                     .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
 
-                MethodInfo addHostedServiceMethod =
-                    typeof(ServiceCollectionHostedServiceExtensions).GetMethods()
-                        .Single(mi =>
-                            mi.Name == nameof(ServiceCollectionHostedServiceExtensions.AddHostedService)
-                            && mi.GetParameters().Length == 1);
-
                 foreach (Type type in ModuleHelper.DependencyInjectedTypes)
                 {
                     DependencyInjectedAttribute depAttr = type.GetCustomAttribute<DependencyInjectedAttribute>();
                     switch (depAttr.Type)
                     {
                         case DIType.HostedService:
-                            addHostedServiceMethod.MakeGenericMethod(type).Invoke(services, new object[] { services });
+                            _addHostedService.MakeGenericMethod(type).Invoke(services, new object[] { services });
                             continue;
                         case DIType.Transient:
                             services.AddTransient(type);
@@ -85,6 +90,9 @@ namespace BotRunner
                                 services.AddSingleton(type);
                             else
                                 services.AddSingleton(depAttr.Implements, type);
+                            continue;
+                        case DIType.Options:
+                            _configureOptions.MakeGenericMethod(type).Invoke(services, new object[] { services, configuration.GetSection(type.Name) });
                             continue;
                     }
                 }
