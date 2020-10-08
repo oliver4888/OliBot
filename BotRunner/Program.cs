@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace BotRunner
 {
@@ -25,6 +26,8 @@ namespace BotRunner
                 mi.Name == nameof(OptionsConfigurationServiceCollectionExtensions.Configure)
                 && mi.GetParameters().Length == 2
                 && mi.GetParameters()[1].ParameterType == typeof(IConfiguration));
+
+        static readonly MethodInfo _addOptions = typeof(Program).GetMethod(nameof(AddOptions), BindingFlags.NonPublic | BindingFlags.Static);
 
         static async Task Main(string[] args)
         {
@@ -93,10 +96,14 @@ namespace BotRunner
                             continue;
                         case DIType.Options:
                             _configureOptions.MakeGenericMethod(type).Invoke(services, new object[] { services, configuration.GetSection(type.Name) });
+                            _addOptions.MakeGenericMethod(type).Invoke(null, new object[] { services });
                             continue;
                     }
                 }
             })
             .Build();
+
+        static IServiceCollection AddOptions<T>(IServiceCollection services) where T : class, new() =>
+            services.AddTransient(services => services.GetRequiredService<IOptions<T>>().Value);
     }
 }
