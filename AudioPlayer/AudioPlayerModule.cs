@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Common;
@@ -18,8 +19,8 @@ namespace AudioPlayer
     {
         readonly IBotCoreModule _botCoreModule;
 
-        public readonly AudioPlayer _config;
-        public readonly VoiceNextExtension _voiceNextExtension;
+        readonly AudioPlayer _config;
+        readonly VoiceNextExtension _voiceNextExtension;
 
         public AudioPlayerModule(IBotCoreModule botCoreModule, AudioPlayer config)
         {
@@ -97,6 +98,39 @@ namespace AudioPlayer
                 await bot.ModifyAsync(member => member.Deafened = true);
 
             return true;
+        }
+
+        public async Task PlayTrack(CommandContext ctx, Track track)
+        {
+            VoiceNextConnection vnc = _voiceNextExtension.GetConnection(ctx.Guild);
+            bool isConnected = vnc != null;
+
+            if (vnc != null && vnc.IsPlaying)
+            {
+                await ctx.Message.RespondAsync("I am already playing something!");
+                return;
+            }
+
+            if (isConnected || await TryJoinVoiceChannel(ctx))
+            {
+                if (!isConnected)
+                    vnc = _voiceNextExtension.GetConnection(ctx.Guild);
+
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = _config.FfmpegLocation,
+                    Arguments = $@"-i ""{Path.Combine(_config.AudioFolderLocation, track.FileName)}"" -ac 2 -f s16le -ar 48000 pipe:1",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+
+                Process ffmpeg = Process.Start(psi);
+                Stream ffout = ffmpeg.StandardOutput.BaseStream;
+
+                VoiceTransmitStream txStream = vnc.GetTransmitStream();
+                await ffout.CopyToAsync(txStream);
+                await txStream.FlushAsync();
+            }
         }
     }
 }

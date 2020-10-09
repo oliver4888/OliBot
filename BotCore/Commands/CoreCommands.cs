@@ -142,7 +142,7 @@ namespace BotCore
 
             foreach (ICommandParameter param in command.Parameters)
             {
-                if (param.Type == typeof(CommandContext))
+                if (param.Type == typeof(CommandContext) || param.FromServices)
                     continue;
 
                 if (param.Required)
