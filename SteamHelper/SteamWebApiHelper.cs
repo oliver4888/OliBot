@@ -15,7 +15,7 @@ namespace SteamHelper
 {
     public interface ISteamWebApiHelper
     {
-        public static IReadOnlyDictionary<string, SteamItemCache> Caches;
+        public IReadOnlyDictionary<string, SteamItemCache> Caches { get; }
 
         public Task<PublishedFileDetailsModel> GetPublishedFileDetails(ulong id);
         public Task<PlayerSummaryModel> GetPlayerSummary(ulong id);
@@ -37,48 +37,39 @@ namespace SteamHelper
         readonly SteamUser SteamUser;
         readonly SteamStore SteamStore;
 
-        static readonly IDictionary<string, SteamItemCache> _caches = new Dictionary<string, SteamItemCache>();
-        public static IReadOnlyDictionary<string, SteamItemCache> Caches => _caches as IReadOnlyDictionary<string, SteamItemCache>;
+        readonly IDictionary<string, SteamItemCache> _caches = new Dictionary<string, SteamItemCache>();
+        public IReadOnlyDictionary<string, SteamItemCache> Caches => _caches as IReadOnlyDictionary<string, SteamItemCache>;
 
-        public SteamWebApiHelper(ILoggerFactory loggerFactory, IConfiguration configuration)
+        public SteamWebApiHelper(ILoggerFactory loggerFactory, SteamHelper config)
         {
             _logger = loggerFactory.CreateLogger<SteamWebApiHelper>();
             _client = new HttpClient();
 
-            IConfigurationSection config = configuration.GetSection("SteamHelper");
-
-            int slidingExpirationHours = int.Parse(config["SlidingExpirationHours"]);
-            string fileCachePath = config["FileCachePath"];
-
-            // Caches of the same endpoint should be shared between instances
-            if (!_caches.ContainsKey(PublishedFileCacheKey))
-                _caches.Add(
+            _caches.Add(
+                PublishedFileCacheKey,
+                SteamItemCache.Create<PublishedFileDetailsModel>(
+                    loggerFactory.CreateLogger<SteamItemCache>(),
                     PublishedFileCacheKey,
-                    SteamItemCache.Create<PublishedFileDetailsModel>(
-                        loggerFactory.CreateLogger<SteamItemCache>(),
-                        PublishedFileCacheKey,
-                        slidingExpirationHours,
-                        fileCachePath));
+                    config.SlidingExpirationHours,
+                    config.FileCachePath));
 
-            if (!_caches.ContainsKey(PlayerSummaryCacheKey))
-                _caches.Add(
+            _caches.Add(
+                PlayerSummaryCacheKey,
+                SteamItemCache.Create<PlayerSummaryModel>(
+                    loggerFactory.CreateLogger<SteamItemCache>(),
                     PlayerSummaryCacheKey,
-                    SteamItemCache.Create<PlayerSummaryModel>(
-                        loggerFactory.CreateLogger<SteamItemCache>(),
-                        PlayerSummaryCacheKey,
-                        slidingExpirationHours,
-                        fileCachePath));
+                    config.SlidingExpirationHours,
+                    config.FileCachePath));
 
-            if (!_caches.ContainsKey(StoreAppDetailsCacheKey))
-                _caches.Add(
+            _caches.Add(
+                StoreAppDetailsCacheKey,
+                SteamItemCache.Create<SteamAppDetails>(
+                    loggerFactory.CreateLogger<SteamItemCache>(),
                     StoreAppDetailsCacheKey,
-                    SteamItemCache.Create<SteamAppDetails>(
-                        loggerFactory.CreateLogger<SteamItemCache>(),
-                        StoreAppDetailsCacheKey,
-                        slidingExpirationHours,
-                        fileCachePath));
+                    config.SlidingExpirationHours,
+                    config.FileCachePath));
 
-            SteamWebInterfaceFactory = new SteamWebInterfaceFactory(config["Token"]);
+            SteamWebInterfaceFactory = new SteamWebInterfaceFactory(config.Token);
             SteamRemoteStorage = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamRemoteStorage>(_client);
             SteamUser = SteamWebInterfaceFactory.CreateSteamWebInterface<SteamUser>(_client);
             SteamStore = SteamWebInterfaceFactory.CreateSteamStoreInterface(_client);
