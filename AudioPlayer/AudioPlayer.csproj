@@ -18,6 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.AudioPlayerModule.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.AudioPlayerModule.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="native-libs\libopus.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
