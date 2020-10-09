@@ -253,12 +253,20 @@ namespace BotCore.Commands
 
             Queue<string> messageParts = new Queue<string>(ctx.ArgumentString.Split(" ").Where(item => !string.IsNullOrWhiteSpace(item)));
 
+            bool foundRemainingText = false;
+
             foreach (ICommandParameter param in command.Parameters)
             {
+                if (param.FromServices)
+                {
+                    parameters.Add(_services.GetRequiredService(param.Type));
+                    continue;
+                }
+                else if (foundRemainingText)
+                    break;
+
                 if (param.Type == typeof(CommandContext))
                     parameters.Add(ctx);
-                else if (param.FromServices)
-                    parameters.Add(_services.GetRequiredService(param.Type));
                 else if (!messageParts.Any())
                 {
                     if (param.Required)
@@ -274,7 +282,8 @@ namespace BotCore.Commands
                     if (param.RemainingText)
                     {
                         parameters.Add(string.Join(" ", messageParts));
-                        break;
+                        foundRemainingText = true;
+                        continue;
                     }
                     else
                         parameters.Add(messageParts.Dequeue());

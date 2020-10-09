@@ -7,31 +7,28 @@ using Common.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 
 namespace BotCore
 {
     [Module(typeof(IBotCoreModule))]
     public class BotCoreModule : IBotCoreModule
     {
-        readonly IConfigurationSection _config;
+        readonly BotCore _config;
         readonly ILogger<BotCoreModule> _logger;
 
         public DiscordClient DiscordClient { get; private set; }
         public ICommandHandler CommandHandler { get; private set; }
         public DateTime StartTime { get; private set; }
-        public ulong HostOwnerID { get; private set; }
+        public ulong HostOwnerID => _config.HostOwnerID;
 
-        public BotCoreModule(ILoggerFactory loggerFactory, IConfiguration configuration, IServiceProvider services)
+        public BotCoreModule(ILoggerFactory loggerFactory, BotCore config, IServiceProvider services)
         {
-            _config = configuration.GetSection("BotCore");
+            _config = config;
             _logger = loggerFactory.CreateLogger<BotCoreModule>();
-
-            HostOwnerID = Convert.ToUInt64(_config["HostOwnerID"]);
 
             DiscordClient = new DiscordClient(new DiscordConfiguration
             {
-                Token = _config["Token"],
+                Token = _config.Token,
                 TokenType = TokenType.Bot,
                 LoggerFactory = loggerFactory
             });
@@ -48,7 +45,7 @@ namespace BotCore
             };
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
-            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this, services, _config["CommandPrefix"]);
+            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this, services, _config.CommandPrefix);
 
             CommandHandler.RegisterCommands<CoreCommands>();
         }
@@ -57,7 +54,7 @@ namespace BotCore
         {
             _logger.LogInformation($"Starting bot with {CommandHandler.Commands.Count()} commands: {string.Join(", ", CommandHandler.Commands.Select(command => command.Name))}");
 
-            string status = _config["InitialStatus"];
+            string status = _config.InitialStatus;
 
             await DiscordClient.ConnectAsync(status != null ? new DiscordActivity(status) : null);
 
