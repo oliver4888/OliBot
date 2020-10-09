@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+
 using Common.Attributes;
 using Common.Interfaces;
 
@@ -16,6 +17,7 @@ namespace BotCore.Commands.Models
         public bool Required => !ParameterInfo.IsOptional;
 
         public bool RemainingText { get; private set; }
+        public bool FromServices { get; private set; }
 
         public CommandParameter(ParameterInfo parameter)
         {
@@ -24,7 +26,9 @@ namespace BotCore.Commands.Models
             Description = ParameterInfo.IsDefined(typeof(DescriptionAttribute), false) ?
                 ParameterInfo.GetCustomAttribute<DescriptionAttribute>().DescriptionText : DescriptionAttribute.NoDescriptionText;
 
-            RemainingText = ParameterInfo.IsDefined(typeof(RemainingTextAttribute), false) ? true : false;
+            RemainingText = ParameterInfo.IsDefined(typeof(RemainingTextAttribute), false);
+
+            FromServices = ParameterInfo.IsDefined(typeof(FromServicesAttribute), false);
         }
     }
 }

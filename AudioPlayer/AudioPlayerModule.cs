@@ -16,10 +16,10 @@ namespace AudioPlayer
     [Module]
     public class AudioPlayerModule
     {
-        static IBotCoreModule _botCoreModule;
-        static AudioPlayer _config;
+        readonly IBotCoreModule _botCoreModule;
 
-        static VoiceNextExtension _voiceNextExtension;
+        public readonly AudioPlayer _config;
+        public readonly VoiceNextExtension _voiceNextExtension;
 
         public AudioPlayerModule(IBotCoreModule botCoreModule, AudioPlayer config)
         {
@@ -67,9 +67,9 @@ namespace AudioPlayer
             }
         }
 
-        public static async Task<bool> TryJoinVoiceChannel(CommandContext ctx) => await TryJoinVoiceChannel(ctx.Guild, ctx.Member, ctx.Message);
+        public async Task<bool> TryJoinVoiceChannel(CommandContext ctx) => await TryJoinVoiceChannel(ctx.Guild, ctx.Member, ctx.Message);
 
-        public static async Task<bool> TryJoinVoiceChannel(DiscordGuild guild, DiscordMember commandAuthor, DiscordMessage commandMessage)
+        public async Task<bool> TryJoinVoiceChannel(DiscordGuild guild, DiscordMember commandAuthor, DiscordMessage commandMessage)
         {
             VoiceNextConnection vnc = _voiceNextExtension.GetConnection(guild);
 

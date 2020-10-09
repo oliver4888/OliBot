@@ -10,5 +10,6 @@ namespace Common.Interfaces
         public string Description { get; }
         public bool Required { get; }
         public bool RemainingText { get; }
+        public bool FromServices { get; }
     }
 }

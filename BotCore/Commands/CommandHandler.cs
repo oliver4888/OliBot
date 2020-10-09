@@ -12,6 +12,7 @@ using BotCore.Commands.Models;
 using System.Collections.Generic;
 using BotCore.Commands.Converters;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BotCore.Commands
 {
@@ -21,6 +22,7 @@ namespace BotCore.Commands
 
         readonly ILogger<CommandHandler> _logger;
         readonly IBotCoreModule _botCoreModuleInstance;
+        readonly IServiceProvider _services;
 
         readonly IList<ICommand> _commands = new List<ICommand>();
         public IReadOnlyCollection<ICommand> Commands => _commands as IReadOnlyCollection<ICommand>;
@@ -29,7 +31,7 @@ namespace BotCore.Commands
 
         readonly MethodInfo ConvertGeneric;
 
-        public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance, string commandPrefix)
+        public CommandHandler(ILogger<CommandHandler> logger, IBotCoreModule botCoreModuleInstance, IServiceProvider services, string commandPrefix)
         {
             _logger = logger;
             _botCoreModuleInstance = botCoreModuleInstance;
@@ -42,6 +44,7 @@ namespace BotCore.Commands
 
                 return Task.CompletedTask;
             };
+            _services = services;
 
             CommandPrefix = commandPrefix;
 
@@ -254,6 +257,8 @@ namespace BotCore.Commands
             {
                 if (param.Type == typeof(CommandContext))
                     parameters.Add(ctx);
+                else if (param.FromServices)
+                    parameters.Add(_services.GetRequiredService(param.Type));
                 else if (!messageParts.Any())
                 {
                     if (param.Required)

@@ -12,7 +12,7 @@ namespace AudioPlayer
     public class AudioPlayerCommands
     {
         [Command(disableDMs: true, groupName: "Audio Player")]
-        public async Task Join(CommandContext ctx) => await AudioPlayerModule.TryJoinVoiceChannel(ctx);
+        public async Task Join(CommandContext ctx, [FromServices] AudioPlayerModule audioPlayerModule) => await audioPlayerModule.TryJoinVoiceChannel(ctx);
 
         [Command(disableDMs: true, groupName: "Audio Player")]
         public async Task Leave(CommandContext ctx)
@@ -27,11 +27,11 @@ namespace AudioPlayer
         }
 
         [Command(disableDMs: true, groupName: "Audio Player")]
-        public async Task Play(CommandContext ctx, [RemainingText] string track)
+        public async Task Play(CommandContext ctx, [RemainingText] string track, [FromServices] AudioPlayerModule audioPlayerModule)
         {
             bool isConnected = ctx.GetVoiceNext().GetConnection(ctx.Guild) != null;
 
-            if (isConnected || await AudioPlayerModule.TryJoinVoiceChannel(ctx))
+            if (isConnected || await audioPlayerModule.TryJoinVoiceChannel(ctx))
             {
                 // Play audio
             }

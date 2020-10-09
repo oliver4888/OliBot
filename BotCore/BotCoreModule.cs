@@ -22,7 +22,7 @@ namespace BotCore
         public DateTime StartTime { get; private set; }
         public ulong HostOwnerID { get; private set; }
 
-        public BotCoreModule(ILoggerFactory loggerFactory, IConfiguration configuration)
+        public BotCoreModule(ILoggerFactory loggerFactory, IConfiguration configuration, IServiceProvider services)
         {
             _config = configuration.GetSection("BotCore");
             _logger = loggerFactory.CreateLogger<BotCoreModule>();
@@ -48,7 +48,7 @@ namespace BotCore
             };
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
-            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this, _config["CommandPrefix"]);
+            CommandHandler = new CommandHandler(loggerFactory.CreateLogger<CommandHandler>(), this, services, _config["CommandPrefix"]);
 
             CommandHandler.RegisterCommands<CoreCommands>();
         }
