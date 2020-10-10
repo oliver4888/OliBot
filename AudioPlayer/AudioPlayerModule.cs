@@ -82,6 +82,12 @@ namespace AudioPlayer
                 return false;
             }
 
+            if (guild.AfkChannel != null && guild.AfkChannel.Id == chn.Id)
+            {
+                await commandMessage.RespondAsync("You are in the AFK channel!");
+                return false;
+            }
+
             if (vnc != null)
             {
                 if (vnc.Channel.Id == chn.Id)
@@ -121,7 +127,8 @@ namespace AudioPlayer
                     FileName = _config.FfmpegLocation,
                     Arguments = $@"-i ""{Path.Combine(_config.AudioFolderLocation, track.FileName)}"" -ac 2 -f s16le -ar 48000 pipe:1",
                     RedirectStandardOutput = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
 
                 Process ffmpeg = Process.Start(psi);
