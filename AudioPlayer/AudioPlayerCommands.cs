@@ -23,7 +23,9 @@ namespace AudioPlayer
         public async Task Leave(CommandContext ctx)
         {
             VoiceNextConnection vnc = ctx.GetVoiceNext().GetConnection(ctx.Guild);
-            if (ctx.Member.VoiceState.Channel == null)
+            if (vnc == null)
+                await ctx.Message.RespondAsync("I'm not in a voice channel!");
+            else if (ctx.Member.VoiceState.Channel == null)
                 await ctx.Message.RespondAsync("You are not in a voice channel!");
             else if (vnc.Channel.Id != ctx.Member.VoiceState.Channel.Id)
                 await ctx.Message.RespondAsync("I am not in your channel!");
@@ -68,7 +70,7 @@ namespace AudioPlayer
                     tracks = tracks.Skip((page - 1) * config.TrackPageSize).Take(config.TrackPageSize);
 
                 int pageCount = (config.Tracks.Count() / config.TrackPageSize) + ((config.Tracks.Count() % config.TrackPageSize) == 0 ? 0 : 1);
-                builder.WithDescription($"Showing page {page} of {pageCount} use `{botCore.CommandHandler.CommandPrefix}tracks <pageNumber>` to view more.");
+                builder.WithDescription($"Showing page {page} of {pageCount}. Use `{botCore.CommandHandler.CommandPrefix}tracks <pageNumber>` to view more.");
             }
 
             if (!tracks.Any())
