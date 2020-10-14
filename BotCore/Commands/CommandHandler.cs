@@ -35,7 +35,7 @@ namespace BotCore.Commands
         {
             _logger = logger;
             _botCoreModuleInstance = botCoreModuleInstance;
-            _botCoreModuleInstance.DiscordClient.MessageCreated += (e) =>
+            _botCoreModuleInstance.DiscordClient.MessageCreated += (client, e) =>
             {
                 Task.Run(async () =>
                 {

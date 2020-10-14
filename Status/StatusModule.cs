@@ -5,7 +5,6 @@ using System.Text.Json;
 using Common.Attributes;
 using Common.Interfaces;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -31,7 +30,7 @@ namespace Status
             _botCoreModule = botCoreModule;
 
             _botCoreModule.CommandHandler.RegisterCommands<StatusCommands>();
-            _botCoreModule.DiscordClient.Ready += async (ReadyEventArgs e) => await SetRandomStatus();
+            _botCoreModule.DiscordClient.Ready += async (client, e) => await SetRandomStatus();
 
             _configFile = Path.Combine(Environment.CurrentDirectory, _statusConfigFileName);
 

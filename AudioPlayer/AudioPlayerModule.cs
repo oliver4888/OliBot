@@ -8,6 +8,7 @@ using Common;
 using Common.Attributes;
 using Common.Interfaces;
 
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
@@ -46,14 +47,14 @@ namespace AudioPlayer
                 File.Copy(Path.Combine(modulePath, "native-libs", libName), Path.Combine(currentPath, libName), true);
         }
 
-        private async Task VoiceStateUpdated(VoiceStateUpdateEventArgs e)
+        private async Task VoiceStateUpdated(DiscordClient client, VoiceStateUpdateEventArgs e)
         {
             VoiceNextConnection vnc = _voiceNextExtension.GetConnection(e.Guild);
 
             if (vnc == null)
                 return;
 
-            if (e.User.Id == e.Client.CurrentUser.Id)
+            if (e.User.Id == client.CurrentUser.Id)
             {
                 if (!e.After.IsServerDeafened)
                 {

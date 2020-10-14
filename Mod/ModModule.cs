@@ -22,7 +22,7 @@ namespace Mod
             _botCoreModule.DiscordClient.MessageUpdated += OnMessageUpdated;
         }
 
-        private async Task OnMessageUpdated(MessageUpdateEventArgs e)
+        private async Task OnMessageUpdated(DiscordClient client, MessageUpdateEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(e.Message.Content) &&
                 e.Message.Attachments.Count == 0 &&

@@ -34,12 +34,12 @@ namespace BotCore
             });
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-            DiscordClient.Ready += async e =>
+            DiscordClient.Ready += async (client, e) =>
             {
-                _logger.LogInformation($"Ready in {e.Client.Guilds.Count} Guilds!");
+                _logger.LogInformation($"Ready in {client.Guilds.Count} Guilds!");
             };
 
-            DiscordClient.ClientErrored += async e =>
+            DiscordClient.ClientErrored += async (client, e) =>
             {
                 _logger.LogError(e.Exception, $"Error in {e.EventName} event");
             };

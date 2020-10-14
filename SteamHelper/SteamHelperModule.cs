@@ -1,4 +1,5 @@
 ﻿using System;
+using DSharpPlus;
 using System.Linq;
 using Steam.Models;
 using Common.Attributes;
@@ -42,7 +43,7 @@ namespace SteamHelper
             _steamWebApiHelper = steamWebApiHelper;
         }
 
-        private async Task OnMessageCreated(MessageCreateEventArgs e)
+        private async Task OnMessageCreated(DiscordClient client, MessageCreateEventArgs e)
         {
             if (e.Author.IsBot || string.IsNullOrWhiteSpace(e.Message.Content)) return;
 
