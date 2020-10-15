@@ -118,6 +118,26 @@ namespace AudioPlayer
                 return;
             }
 
+            if (isConnected)
+            {
+                DiscordChannel chn = ctx.Member.VoiceState?.Channel;
+                if (chn == null)
+                {
+                    await ctx.Message.RespondAsync("You need to be in a voice channel!");
+                    return;
+                }
+                else if (ctx.Guild.AfkChannel != null && ctx.Guild.AfkChannel.Id == chn.Id)
+                {
+                    await ctx.Message.RespondAsync("You are in the AFK channel!");
+                    return;
+                }
+                else if (vnc.Channel.Id != chn.Id)
+                {
+                    await ctx.Message.RespondAsync("I am not in your channel!");
+                    return;
+                }
+            }
+
             if (isConnected || await TryJoinVoiceChannel(ctx))
             {
                 if (!isConnected)
