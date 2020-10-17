@@ -12,30 +12,37 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
+using Microsoft.Extensions.Logging;
 
 namespace AudioPlayer
 {
     [Module]
     public class AudioPlayerModule
     {
+        readonly ILogger<AudioPlayerModule> _logger;
         readonly IBotCoreModule _botCoreModule;
 
         readonly AudioPlayer _config;
         readonly VoiceNextExtension _voiceNextExtension;
 
-        public AudioPlayerModule(IBotCoreModule botCoreModule, AudioPlayer config)
+        public AudioPlayerModule(ILogger<AudioPlayerModule> logger, IBotCoreModule botCoreModule, AudioPlayer config)
         {
             // These dlls are imported via DllImportAttribute which does not trigger BotRunner's assembly resolve functionality
             string opus = "libopus.dll", sodium = "libsodium.dll";
             CopyNativeLib(opus);
             CopyNativeLib(sodium);
-
+            
+            _logger = logger;
             _botCoreModule = botCoreModule;
             _botCoreModule.CommandHandler.RegisterCommands<AudioPlayerCommands>();
             _botCoreModule.DiscordClient.VoiceStateUpdated += VoiceStateUpdated;
 
             _config = config;
             _voiceNextExtension = _botCoreModule.DiscordClient.UseVoiceNext(new VoiceNextConfiguration { EnableIncoming = false });
+
+            foreach (Track track in config.Tracks)
+                if (track.FileName != null && track.FileNames != null)
+                    _logger.LogWarning($"Track \"{track.Name}\" has a file name and a list of file names, if the file name is not also included in the list it will not be used as a trigger!");
         }
 
         private void CopyNativeLib(string libName)
@@ -146,7 +153,7 @@ namespace AudioPlayer
                 ProcessStartInfo psi = new ProcessStartInfo
                 {
                     FileName = _config.FfmpegLocation,
-                    Arguments = $@"-i ""{Path.Combine(_config.AudioFolderLocation, track.FileName)}"" -ac 2 -f s16le -ar 48000 pipe:1",
+                    Arguments = $@"-i ""{Path.Combine(_config.AudioFolderLocation, track.GetFileName())}"" -ac 2 -f s16le -ar 48000 pipe:1",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true

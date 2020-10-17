@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 
 using Common;
 using Common.Attributes;
@@ -16,8 +18,13 @@ namespace AudioPlayer
 
     public class Track
     {
+        readonly Random _random = new Random();
+
         public string Name { get; set; }
         public string FileName { get; set; }
+        public IEnumerable<string> FileNames { get; set; }
         public string Description { get; set; }
+
+        public string GetFileName() => FileNames == null ? FileName : FileNames.ToArray()[_random.Next(0, FileNames.Count())];
     }
 }
