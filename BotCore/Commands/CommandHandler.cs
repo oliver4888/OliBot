@@ -207,7 +207,9 @@ namespace BotCore.Commands
             if (e.Channel.IsPrivate && command.DisableDMs)
                 return;
 
-            if (command.PermissionLevel == BotPermissionLevel.HostOwner && e.Author.Id != _botCoreModuleInstance.HostOwnerID)
+            bool isHostOwner = e.Author.Id == _botCoreModuleInstance.HostOwnerID;
+
+            if (command.PermissionLevel == BotPermissionLevel.HostOwner && !isHostOwner)
             {
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
                 return;
@@ -227,6 +229,12 @@ namespace BotCore.Commands
                 ctx.ChannelPermissions.HasFlag(command.Permissions)))
             {
                 await e.Channel.SendMessageAsync($"{e.Author.Mention} You do not have the required permissions to use this command!");
+                return;
+            }
+
+            if (command.UserWhitelist != null && !(command.UserWhitelist.Contains(e.Author.Id) || isHostOwner))
+            {
+                await e.Channel.SendMessageAsync($"{e.Author.Mention} You are not authorised to use this command!");
                 return;
             }
 

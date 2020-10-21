@@ -21,5 +21,6 @@ namespace Common.Interfaces
 
         public BotPermissionLevel PermissionLevel { get; }
         public Permissions Permissions { get; }
+        public IReadOnlyCollection<ulong> UserWhitelist { get; }
     }
 }

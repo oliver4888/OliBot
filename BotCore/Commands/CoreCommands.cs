@@ -2,6 +2,7 @@
 using System;
 using DSharpPlus;
 using System.Text;
+using System.Linq;
 using Common.Attributes;
 using Common.Extensions;
 using Common.Interfaces;
@@ -80,6 +81,7 @@ namespace BotCore
 
         private bool HasPermissions(CommandContext ctx, ICommand command) => !(command.Hidden || (ctx.IsDMs && command.DisableDMs) ||
                     (command.PermissionLevel == BotPermissionLevel.HostOwner && ctx.Author.Id != ctx.BotCoreModule.HostOwnerID) ||
+                    (command.UserWhitelist != null && !(command.UserWhitelist.Contains(ctx.Member.Id) || ctx.Author.Id == ctx.BotCoreModule.HostOwnerID)) ||
                     (command.PermissionLevel == BotPermissionLevel.Admin && !ctx.ChannelPermissions.HasFlag(Permissions.Administrator)));
 
         private DiscordEmbed GenHelpEmbed(CommandContext ctx)

@@ -28,6 +28,7 @@ namespace BotCore.Commands.Models
 
         public BotPermissionLevel PermissionLevel { get; private set; }
         public Permissions Permissions { get; private set; }
+        public IReadOnlyCollection<ulong> UserWhitelist { get; private set; }
 
         public Command(Type type, ref object typeInstance, MethodInfo commandMethod)
         {
@@ -51,6 +52,9 @@ namespace BotCore.Commands.Models
 
             Permissions = commandMethod.IsDefined(typeof(RequiredPermissionsAttribute), false) ?
                 commandMethod.GetCustomAttribute<RequiredPermissionsAttribute>().Permissions : Permissions.None;
+
+            UserWhitelist = commandMethod.IsDefined(typeof(UserWhitelistAttribute), false) ?
+                commandMethod.GetCustomAttribute<UserWhitelistAttribute>().UserIds : null;
 
             IList<Type> args = new List<Type>();
             foreach (ParameterInfo param in commandMethod.GetParameters())
