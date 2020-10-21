@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Common;
 using Common.Attributes;
@@ -25,13 +26,15 @@ namespace AudioPlayer
         readonly AudioPlayer _config;
         readonly VoiceNextExtension _voiceNextExtension;
 
+        public int TrackPageSize => _config.TrackPageSize;
+
         public AudioPlayerModule(ILogger<AudioPlayerModule> logger, IBotCoreModule botCoreModule, AudioPlayer config)
         {
             // These dlls are imported via DllImportAttribute which does not trigger BotRunner's assembly resolve functionality
             string opus = "libopus.dll", sodium = "libsodium.dll";
             CopyNativeLib(opus);
             CopyNativeLib(sodium);
-            
+
             _logger = logger;
             _botCoreModule = botCoreModule;
             _botCoreModule.CommandHandler.RegisterCommands<AudioPlayerCommands>();
@@ -75,6 +78,9 @@ namespace AudioPlayer
                     vnc.Disconnect();
             }
         }
+
+        public IEnumerable<Track> GetTracksForGuild(ulong guildId) =>
+            _config.Tracks.Where(track => track.GuildIdWhitelist == null || track.GuildIdWhitelist.Contains(guildId));
 
         public async Task<bool> TryJoinVoiceChannel(CommandContext ctx) => await TryJoinVoiceChannel(ctx.Guild, ctx.Member, ctx.Message);
 

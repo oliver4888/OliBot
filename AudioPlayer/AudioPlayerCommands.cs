@@ -34,9 +34,9 @@ namespace AudioPlayer
         }
 
         [Command(disableDMs: true, groupName: "Audio Player")]
-        public async Task Play(CommandContext ctx, [RemainingText] string trackName, [FromServices] AudioPlayerModule audioPlayerModule, [FromServices] AudioPlayer config)
+        public async Task Play(CommandContext ctx, [RemainingText] string trackName, [FromServices] AudioPlayerModule audioPlayerModule)
         {
-            Track track = config.Tracks.SingleOrDefault(track => track.Name == trackName.ToLowerInvariant());
+            Track track = audioPlayerModule.GetTracksForGuild(ctx.Guild.Id).SingleOrDefault(track => track.Name == trackName.ToLowerInvariant());
 
             if (track == null)
             {
@@ -48,9 +48,9 @@ namespace AudioPlayer
         }
 
         [Command(disableDMs: true, groupName: "Audio Player")]
-        public async Task Tracks(CommandContext ctx, int page = 1, [FromServices] AudioPlayer config = null, [FromServices] IBotCoreModule botCore = null)
+        public async Task Tracks(CommandContext ctx, int page = 1, [FromServices] AudioPlayerModule module = null, [FromServices] IBotCoreModule botCore = null)
         {
-            if (page == 0)
+            if (page <= 0)
             {
                 await ctx.Message.RespondAsync("Please select a page number greater than 0.");
                 return;
@@ -60,17 +60,17 @@ namespace AudioPlayer
                 .WithTitle("Tracks")
                 .WithCustomFooterWithColour(ctx);
 
-            IEnumerable<Track> tracks = config.Tracks;
+            IEnumerable<Track> tracks = module.GetTracksForGuild(ctx.Guild.Id);
 
-            if (config.Tracks.Count() > config.TrackPageSize)
+            if (tracks.Count() > module.TrackPageSize)
             {
-                if (page == 1)
-                    tracks = tracks.Take(config.TrackPageSize);
-                else
-                    tracks = tracks.Skip((page - 1) * config.TrackPageSize).Take(config.TrackPageSize);
-
-                int pageCount = (config.Tracks.Count() / config.TrackPageSize) + ((config.Tracks.Count() % config.TrackPageSize) == 0 ? 0 : 1);
+                int pageCount = (tracks.Count() / module.TrackPageSize) + ((tracks.Count() % module.TrackPageSize) == 0 ? 0 : 1);
                 builder.WithDescription($"Showing page {page} of {pageCount}. Use `{botCore.CommandHandler.CommandPrefix}tracks <pageNumber>` to view more.");
+
+                if (page == 1)
+                    tracks = tracks.Take(module.TrackPageSize);
+                else
+                    tracks = tracks.Skip((page - 1) * module.TrackPageSize).Take(module.TrackPageSize);
             }
 
             if (!tracks.Any())

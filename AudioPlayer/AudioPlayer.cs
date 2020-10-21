@@ -13,7 +13,7 @@ namespace AudioPlayer
         public string FfmpegLocation { get; set; }
         public string AudioFolderLocation { get; set; }
         public int TrackPageSize { get; set; }
-        public IReadOnlyList<Track> Tracks { get; set; }
+        public IReadOnlyCollection<Track> Tracks { get; set; }
     }
 
     public class Track
@@ -22,8 +22,9 @@ namespace AudioPlayer
 
         public string Name { get; set; }
         public string FileName { get; set; }
-        public IEnumerable<string> FileNames { get; set; }
+        public IReadOnlyCollection<string> FileNames { get; set; }
         public string Description { get; set; }
+        public IReadOnlyCollection<ulong> GuildIdWhitelist { get; set; }
 
         public string GetFileName() => FileNames == null ? FileName : FileNames.ToArray()[_random.Next(0, FileNames.Count())];
     }
