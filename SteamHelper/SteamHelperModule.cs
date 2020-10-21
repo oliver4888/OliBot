@@ -38,7 +38,15 @@ namespace SteamHelper
             _botCoreModule = botCoreModule;
 
             _botCoreModule.CommandHandler.RegisterCommands<SteamCommands>();
-            _botCoreModule.DiscordClient.MessageCreated += OnMessageCreated;
+            _botCoreModule.DiscordClient.MessageCreated += (client, e) =>
+            {
+                Task.Run(async () =>
+                {
+                    await OnMessageCreated(client, e);
+                });
+
+                return Task.CompletedTask;
+            };
 
             _steamWebApiHelper = steamWebApiHelper;
         }
