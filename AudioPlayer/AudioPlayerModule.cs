@@ -74,7 +74,7 @@ namespace AudioPlayer
             }
             else
             {
-                if (e.Before?.Channel != null && e.Before.Channel.Id == vnc.Channel.Id && e.Before.Channel.Users.Where(u => !u.IsBot).Count() == 0)
+                if (e.Before?.Channel != null && e.Before.Channel.Id == vnc.TargetChannel.Id && e.Before.Channel.Users.Where(u => !u.IsBot).Count() == 0)
                     vnc.Disconnect();
             }
         }
@@ -104,7 +104,7 @@ namespace AudioPlayer
 
             if (vnc != null)
             {
-                if (vnc.Channel.Id == chn.Id)
+                if (vnc.TargetChannel.Id == chn.Id)
                     await commandMessage.RespondAsync("I am already in that channel!");
                 else
                     await commandMessage.RespondAsync("I am already in a channel for this guild!");
@@ -144,7 +144,7 @@ namespace AudioPlayer
                     await ctx.Message.RespondAsync("You are in the AFK channel!");
                     return;
                 }
-                else if (vnc.Channel.Id != chn.Id)
+                else if (vnc.TargetChannel.Id != chn.Id)
                 {
                     await ctx.Message.RespondAsync("I am not in your channel!");
                     return;
@@ -168,7 +168,7 @@ namespace AudioPlayer
                 Process ffmpeg = Process.Start(psi);
                 Stream ffout = ffmpeg.StandardOutput.BaseStream;
 
-                VoiceTransmitStream txStream = vnc.GetTransmitStream();
+                VoiceTransmitSink txStream = vnc.GetTransmitSink();
                 await ffout.CopyToAsync(txStream);
                 await txStream.FlushAsync();
             }

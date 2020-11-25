@@ -27,7 +27,7 @@ namespace AudioPlayer
                 await ctx.Message.RespondAsync("I'm not in a voice channel!");
             else if (ctx.Member.VoiceState.Channel == null)
                 await ctx.Message.RespondAsync("You are not in a voice channel!");
-            else if (vnc.Channel.Id != ctx.Member.VoiceState.Channel.Id)
+            else if (vnc.TargetChannel.Id != ctx.Member.VoiceState.Channel.Id)
                 await ctx.Message.RespondAsync("I am not in your channel!");
             else if (vnc != null)
                 vnc.Disconnect();
