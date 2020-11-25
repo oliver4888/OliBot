@@ -24,7 +24,7 @@ namespace BotCore.Commands.Converters
             string str = Enum.GetNames(type).FirstOrDefault(x => x.ToLowerInvariant() == value.ToLowerInvariant());
 
             if (str == null)
-                return true;
+                return false;
             else
             {
                 parsedValue = Enum.Parse(type, str, true);
