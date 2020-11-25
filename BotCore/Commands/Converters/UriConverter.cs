@@ -1,6 +1,6 @@
-﻿using Common;
+﻿using OliBot.API;
 using System;
-using Common.Interfaces;
+using OliBot.API.Interfaces;
 
 namespace BotCore.Commands.Converters
 {

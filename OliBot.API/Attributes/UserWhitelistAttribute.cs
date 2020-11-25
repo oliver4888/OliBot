@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Common.Attributes
+namespace OliBot.API.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
     public class UserWhitelistAttribute : Attribute

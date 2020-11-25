@@ -2,7 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Common.Attributes;
+using OliBot.API.Attributes;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 

@@ -1,6 +1,6 @@
 ﻿using DSharpPlus;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 using DSharpPlus.EventArgs;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;

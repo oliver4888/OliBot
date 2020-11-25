@@ -1,6 +1,6 @@
 ﻿using DSharpPlus.Entities;
 
-namespace Common.Extensions
+namespace OliBot.API.Extensions
 {
     public static class DiscordEmbedBuilderExtensions
     {

@@ -1,4 +1,4 @@
-﻿namespace Common
+﻿namespace OliBot.API
 {
     public enum BotPermissionLevel
     {

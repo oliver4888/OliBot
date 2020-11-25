@@ -1,4 +1,4 @@
-﻿namespace Common.Interfaces
+﻿namespace OliBot.API.Interfaces
 {
     public interface IConverter<T> : IGenericConverter
     {

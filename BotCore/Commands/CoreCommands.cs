@@ -1,11 +1,11 @@
-﻿using Common;
+﻿using OliBot.API;
 using System;
 using DSharpPlus;
 using System.Text;
 using System.Linq;
-using Common.Attributes;
-using Common.Extensions;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Extensions;
+using OliBot.API.Interfaces;
 using System.Reflection;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;

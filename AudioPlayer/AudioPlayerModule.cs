@@ -5,9 +5,9 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 
-using Common;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 
 using DSharpPlus;
 using DSharpPlus.Entities;

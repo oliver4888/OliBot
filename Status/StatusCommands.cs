@@ -1,5 +1,5 @@
-﻿using Common;
-using Common.Attributes;
+﻿using OliBot.API;
+using OliBot.API.Attributes;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 

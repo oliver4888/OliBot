@@ -1,9 +1,9 @@
-﻿using Common;
+﻿using OliBot.API;
 using System;
 using Serilog;
 using System.IO;
 using System.Linq;
-using Common.Attributes;
+using OliBot.API.Attributes;
 using System.Reflection;
 using System.Diagnostics;
 using System.Threading.Tasks;

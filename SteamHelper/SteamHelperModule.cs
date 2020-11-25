@@ -2,8 +2,8 @@
 using DSharpPlus;
 using System.Linq;
 using Steam.Models;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 using SteamHelper.Models;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;

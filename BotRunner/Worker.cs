@@ -1,9 +1,9 @@
-﻿using Common;
+﻿using OliBot.API;
 using System;
 using System.Linq;
 using System.Threading;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

@@ -1,9 +1,9 @@
-﻿using Common;
+﻿using OliBot.API;
 using System;
 using DSharpPlus;
 using System.Linq;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 using System.Reflection;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;

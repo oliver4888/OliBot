@@ -2,7 +2,7 @@
 using DSharpPlus;
 using System.Threading.Tasks;
 
-namespace Common.Interfaces
+namespace OliBot.API.Interfaces
 {
     public interface IBotCoreModule
     {

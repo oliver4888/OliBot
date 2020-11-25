@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Common.Attributes
+namespace OliBot.API.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class DependencyInjectedAttribute : Attribute

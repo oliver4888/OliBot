@@ -1,5 +1,5 @@
-﻿using Common;
-using Common.Interfaces;
+﻿using OliBot.API;
+using OliBot.API.Interfaces;
 using DSharpPlus.Entities;
 using System.Text.RegularExpressions;
 

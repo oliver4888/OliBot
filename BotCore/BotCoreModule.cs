@@ -2,8 +2,8 @@
 using DSharpPlus;
 using System.Linq;
 using BotCore.Commands;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;

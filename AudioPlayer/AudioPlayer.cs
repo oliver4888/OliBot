@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Collections.Generic;
 
-using Common;
-using Common.Attributes;
+using OliBot.API;
+using OliBot.API.Attributes;
 
 namespace AudioPlayer
 {

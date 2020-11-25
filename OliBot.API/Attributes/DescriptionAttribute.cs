@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Common.Attributes
+namespace OliBot.API.Attributes
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter, AllowMultiple = false, Inherited = false)]
     public class DescriptionAttribute : Attribute

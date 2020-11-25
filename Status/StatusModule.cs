@@ -2,8 +2,8 @@
 using System.IO;
 using System.Timers;
 using System.Text.Json;
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;

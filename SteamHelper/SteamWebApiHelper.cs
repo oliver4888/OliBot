@@ -1,7 +1,7 @@
-﻿using Common;
+﻿using OliBot.API;
 using Steam.Models;
 using System.Net.Http;
-using Common.Attributes;
+using OliBot.API.Attributes;
 using SteamHelper.Models;
 using System.Threading.Tasks;
 using SteamWebAPI2.Utilities;

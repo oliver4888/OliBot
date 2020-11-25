@@ -3,7 +3,7 @@ using DSharpPlus;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace Common.Interfaces
+namespace OliBot.API.Interfaces
 {
     public interface ICommand
     {

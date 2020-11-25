@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 using AudioPlayer.Extensions;
 
-using Common;
-using Common.Attributes;
-using Common.Extensions;
-using Common.Interfaces;
+using OliBot.API;
+using OliBot.API.Attributes;
+using OliBot.API.Extensions;
+using OliBot.API.Interfaces;
 
 using DSharpPlus.Entities;
 using DSharpPlus.VoiceNext;

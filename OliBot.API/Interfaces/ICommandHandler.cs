@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Common.Interfaces
+namespace OliBot.API.Interfaces
 {
     public interface ICommandHandler
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Reflection;
 
-using Common.Attributes;
-using Common.Interfaces;
+using OliBot.API.Attributes;
+using OliBot.API.Interfaces;
 
 namespace BotCore.Commands.Models
 {

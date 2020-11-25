@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Common.Interfaces
+namespace OliBot.API.Interfaces
 {
     public interface ICommandParameter
     {

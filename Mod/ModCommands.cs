@@ -1,8 +1,8 @@
-﻿using Common;
+﻿using OliBot.API;
 using System;
 using DSharpPlus;
 using System.Linq;
-using Common.Attributes;
+using OliBot.API.Attributes;
 using DSharpPlus.Entities;
 using System.Threading.Tasks;
 using System.Collections.Generic;

@@ -1,10 +1,10 @@
 ﻿using DSharpPlus;
-using Common.Interfaces;
+using OliBot.API.Interfaces;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System.Collections.Generic;
 
-namespace Common
+namespace OliBot.API
 {
     public class CommandContext
     {
