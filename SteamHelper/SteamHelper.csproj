@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AssemblyName>SteamHelperModule</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SteamWebAPI2" Version="4.2.5" />
-    <PackageReference Include="System.Runtime.Caching" Version="4.7.0" />
+    <PackageReference Include="SteamWebAPI2" Version="4.3.2" />
+    <PackageReference Include="System.Runtime.Caching" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>

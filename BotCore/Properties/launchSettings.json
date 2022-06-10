@@ -2,9 +2,9 @@
   "profiles": {
     "BotCore": {
       "commandName": "Executable",
-      "executablePath": "$(SolutionDir)BotRunner\\bin\\$(ConfigurationName)\\netcoreapp3.1\\BotRunner.exe",
+      "executablePath": "$(SolutionDir)BotRunner\\bin\\$(ConfigurationName)\\$(TargetFramework)\\BotRunner.exe",
       "commandLineArgs": "--debug-module-folder $(TargetDir)",
-      "workingDirectory": "$(SolutionDir)BotRunner\\bin\\$(ConfigurationName)\\netcoreapp3.1\\"
+      "workingDirectory": "$(SolutionDir)BotRunner\\bin\\$(ConfigurationName)\\$(TargetFramework)\\"
     }
   }
 }

@@ -9,7 +9,6 @@ using SteamWebAPI2.Interfaces;
 using System.Collections.Generic;
 using Steam.Models.SteamCommunity;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
 
 namespace SteamHelper
 {
@@ -85,6 +84,6 @@ namespace SteamHelper
                 await _caches[PlayerSummaryCacheKey].AddOrGetExisting(id.ToString(), async () => (await SteamUser.GetPlayerSummaryAsync(id))?.Data);
 
         public async Task<SteamAppDetails> GetStoreDetails(uint id) =>
-            await _caches[StoreAppDetailsCacheKey].AddOrGetExisting(id.ToString(), async () => (SteamAppDetails)await SteamStore.GetStoreAppDetailsAsync(id));
+            await _caches[StoreAppDetailsCacheKey].AddOrGetExisting(id.ToString(), async () => (SteamAppDetails)await SteamStore.GetStoreAppDetailsAsync(id, "gb"));
     }
 }
