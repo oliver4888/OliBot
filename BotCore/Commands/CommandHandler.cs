@@ -57,7 +57,7 @@ namespace BotCore.Commands
                             Activator.CreateInstance(t) as IGenericConverter));
 
             // + 1: EnumConverter
-            _logger.LogDebug($"{nameof(CommandHandler)}: Registered {_converters.Count + 1} type converters.");
+            _logger.LogDebug(nameof(CommandHandler) + ": Registered {converterCount} type converters.", _converters.Count + 1);
 
             ConvertGeneric = GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance).FirstOrDefault(mi => mi.Name == nameof(TryConvertParameter) && mi.ContainsGenericParameters);
         }
@@ -73,7 +73,7 @@ namespace BotCore.Commands
 
             if (!commands.Any())
             {
-                _logger.LogWarning($"No commands were found in type: {commandClass.FullName}");
+                _logger.LogWarning("No commands were found in type: {commandClassName}", commandClass.FullName);
                 return;
             }
 
@@ -82,7 +82,9 @@ namespace BotCore.Commands
             foreach (MethodInfo command in commands)
                 _commands.Add(new Command(commandClass, ref commandClassInstance, command));
 
-            _logger.LogInformation($"Registered {commands.Count()} command{(commands.Count() > 1 ? "s" : "")} for type {commandClass.FullName}");
+#pragma warning disable CA2254 // Template should be a static expression
+            _logger.LogInformation("Registered {commandCount} command" + (commands.Count() > 1 ? "s" : "")+ " for type {commandClassName}", commands.Count(), commandClass.FullName);
+#pragma warning restore CA2254 // Template should be a static expression
         }
 
         public void RegisterConverter<T>() => RegisterConverter(typeof(T));
@@ -103,7 +105,7 @@ namespace BotCore.Commands
             Type conversionType = iConverterType.GenericTypeArguments[0]; // nameof(IConverter<int>) will return IConverter
 
             if (_converters.ContainsKey(conversionType))
-                _logger.LogWarning($"Ignoring duplicate converter registration for type {conversionType.FullName}");
+                _logger.LogWarning("Ignoring duplicate converter registration for type {typeName}", conversionType.FullName);
             else
                 _converters.Add(
                     conversionType,
@@ -129,7 +131,7 @@ namespace BotCore.Commands
                 }
                 else
                 {
-                    _logger.LogWarning($"Unable to convert parameter to enum {type.FullName}: {value}");
+                    _logger.LogWarning("Unable to convert parameter to enum {typeName}: {value}", type.FullName, value);
                     return false;
                 }
             }
@@ -147,12 +149,12 @@ namespace BotCore.Commands
                 }
                 else
                 {
-                    _logger.LogWarning($"Unable to convert parameter to type {type.FullName}: {value}");
+                    _logger.LogWarning("Unable to convert parameter to type {typeName}: {value}", type.FullName, value);
                     return false;
                 }
             }
 
-            _logger.LogWarning($"No converter present for type {type.FullName}");
+            _logger.LogWarning("No converter present for type {typeName}", type.FullName);
             return false;
         }
 
@@ -172,7 +174,7 @@ namespace BotCore.Commands
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Unable to convert parameter via {nameof(ConvertGeneric)}");
+                _logger.LogError(ex, "Unable to convert parameter via {convertFunc}", nameof(ConvertGeneric));
                 return false;
             }
         }
@@ -313,13 +315,15 @@ namespace BotCore.Commands
 
         private async Task InvokeCommand(ICommand command, CommandContext ctx, object[] parameters)
         {
-            string cmdLogPart = $"Running command " +
-                $"{(ctx.AliasUsed == command.Name ? $"`{command.Name}`" : $"`{command.Name}` (alias `{ctx.AliasUsed}`)")} for {ctx.Author.Username}({ctx.Author.Id}) in";
-
             if (ctx.IsDMs)
-                _logger.LogDebug($"{cmdLogPart} DMs");
+                _logger.LogDebug(
+                    "Running command {commandName}(alias: {alias}) for {username}/{userId} in DMs",
+                    command.Name, ctx.AliasUsed == command.Name ? "N/A" : ctx.AliasUsed, ctx.Author.Username, ctx.Author.Id);
             else
-                _logger.LogDebug($"{cmdLogPart} channel: {ctx.Channel.Name}/{ctx.Channel.Id}, guild: {ctx.Guild.Name}/{ctx.Guild.Id}");
+                _logger.LogDebug(
+                    "Running command {commandName}(alias: {alias}) for {username}/{userId} in channel: {channelName}/{channelId}, guild {guildName}/{guildId}",
+                    command.Name, ctx.AliasUsed == command.Name ? "N/A" : ctx.AliasUsed, ctx.Author.Username, ctx.Author.Id,
+                    ctx.Channel.Name, ctx.Channel.Id, ctx.Guild.Name, ctx.Guild.Id);
 
             try
             {
@@ -330,7 +334,7 @@ namespace BotCore.Commands
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error running command `{command.Name}`");
+                _logger.LogError(ex, "Error running command `{commandName}`", command.Name);
             }
         }
     }

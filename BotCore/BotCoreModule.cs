@@ -36,12 +36,12 @@ namespace BotCore
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
             DiscordClient.Ready += async (client, e) =>
             {
-                _logger.LogInformation($"Ready in {client.Guilds.Count} Guilds!");
+                _logger.LogInformation("Ready in {guildCount} Guilds!", client.Guilds.Count);
             };
 
             DiscordClient.ClientErrored += async (client, e) =>
             {
-                _logger.LogError(e.Exception, $"Error in {e.EventName} event");
+                _logger.LogError(e.Exception, "Error in {eventName} event", e.EventName);
             };
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
@@ -52,7 +52,9 @@ namespace BotCore
 
         public async Task Start()
         {
+#pragma warning disable CA2254 // Template should be a static expression
             _logger.LogInformation($"Starting bot with {CommandHandler.Commands.Count()} commands: {string.Join(", ", CommandHandler.Commands.Select(command => command.Name))}");
+#pragma warning restore CA2254 // Template should be a static expression
 
             string status = _config.InitialStatus;
 

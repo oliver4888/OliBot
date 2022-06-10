@@ -79,12 +79,16 @@ namespace SteamHelper
 
             if (!embedResult.success)
             {
-                _logger.LogDebug($"Unable to generate embed for {page}/{stringId}");
+                _logger.LogDebug("Unable to generate embed for {page}/{steamId}", page, stringId);
                 return;
             }
 
-            _logger.LogDebug($"Generating Steam embed {page}:{stringId} for {e.Author.Username}({e.Author.Id}) in " +
-                $"{(e.Channel.IsPrivate ? "DMs" : $"channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}")}");
+            if (e.Channel.IsPrivate)
+                _logger.LogDebug("Generating Steam embed {page}:{steamId} for {username}/{userId} in DMs",
+                    page, stringId, e.Author.Username, e.Author.Id);
+            else
+                _logger.LogDebug("Generating Steam embed {page}:{steamId} for {username}/{userId} in channel: {channelName}/{channelId}, guild: {guildName}/{guildId}",
+                    page, stringId, e.Author.Username, e.Author.Id, e.Channel.Name, e.Channel.Id, e.Guild.Name, e.Guild.Id);
 
             await e.Channel.SendMessageAsync(embed: embedResult.embed);
 
@@ -99,11 +103,11 @@ namespace SteamHelper
                 }
                 catch (NotFoundException)
                 {
-                    _logger.LogDebug($"Attempted to remove deleted message {e.Message.Id}");
+                    _logger.LogDebug("Attempted to remove deleted message {messageId}", e.Message.Id);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Error deleting message {e.Message.Id}");
+                    _logger.LogError(ex, "Error deleting message {messageId}", e.Message.Id);
                 }
             }
             else

@@ -36,7 +36,7 @@ namespace Status
 
             if (!File.Exists(_configFile))
             {
-                _logger.LogInformation($"{nameof(StatusModule)}: No config file found. Creating default config at {_configFile}");
+                _logger.LogInformation(nameof(StatusModule) + ": No config file found. Creating default config at {configFile}", _configFile);
                 StatusConfig = new StatusModuleConfig
                 {
                     Mode = StatusMode.Automatic

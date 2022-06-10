@@ -30,7 +30,9 @@ namespace Mod
                 e.Message.Flags.HasValue &&
                 e.Message.Flags.Value.HasFlag(MessageFlags.SuppressedEmbeds))
             {
-                _logger.LogDebug($"Deleting blank message from {e.Author.Username}({e.Author.Id}) in channel: {e.Channel.Name}/{e.Channel.Id}, guild: {e.Guild.Name}/{e.Guild.Id}");
+                _logger.LogDebug(
+                    "Deleting blank message from {username}/{userId} in channel: {channelName}/{channelId}, guild: {guildName}/{guildId}",
+                    e.Author.Username, e.Author.Id, e.Channel.Name, e.Channel.Id, e.Guild.Name, e.Guild.Id);
                 await e.Message.DeleteAsync();
             }
         }

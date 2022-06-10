@@ -45,7 +45,9 @@ namespace AudioPlayer
 
             foreach (Track track in config.Tracks)
                 if (track.FileName != null && track.FileNames != null)
-                    _logger.LogWarning($"Track \"{track.Name}\" has a file name and a list of file names, if the file name is not also included in the list it will not be used as a trigger!");
+                    _logger.LogWarning(
+                        "Track \"{trackName}\" has a file name and a list of file names, if the file name is not also included in the list it will not be used as a trigger!",
+                        track.Name);
         }
 
         private void CopyNativeLib(string libName)
