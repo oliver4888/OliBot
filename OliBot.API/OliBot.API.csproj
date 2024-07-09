@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="4.2.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
-    <PackageReference Include="System.Text.Json" Version="6.0.4" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
   </ItemGroup>
 
 </Project>
